@@ -40,7 +40,8 @@ The following commands are required during development phase
 | Publish to Exchange | mvn deploy |
 
 ##### Dependencies
-Esta policy utiliza Object Store como base de datos clave valor que permite mantener el estado del circuito en todo momento. Ademas utiliza http transport module extension, para realizar la inyeccion de headers en la respuesta en caso de error.
+This policy uses a persistent Object Store as a key value database that allows maintaining the state of the circuit at every time. It also uses the http transport extension module, to perform the update of headers in the response in case of error.
+
 
 ### Contribution
 
