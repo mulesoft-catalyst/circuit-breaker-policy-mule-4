@@ -1,0 +1,24 @@
+{
+  "configs": [
+    "template.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "9033ff23-884a-4352-b75b-14fc8237b2c4:circuit-breaker-mule-4:6.0.0-SNAPSHOT",
+  "minMuleVersion": "4.1.1",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {}
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {
+      "groupId": "9033ff23-884a-4352-b75b-14fc8237b2c4",
+      "classifier": "mule-policy",
+      "artifactId": "circuit-breaker-mule-4",
+      "type": "jar",
+      "version": "6.0.0-SNAPSHOT"
+    }
+  }
+}

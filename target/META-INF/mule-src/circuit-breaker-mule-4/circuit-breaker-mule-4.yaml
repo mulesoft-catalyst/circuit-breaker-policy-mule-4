@@ -1,0 +1,33 @@
+id: circuit-breaker-mule-4
+name: circuit-breaker-mule-4
+description: A custom policy to implement a lightweight Circuit Breaker pattern
+category: Custom
+type: custom
+resourceLevelSupported: true
+encryptionSupported: false
+standalone: true
+requiredCharacteristics: []
+providedCharacteristics: []
+configuration:
+  - propertyName: timeout
+    name: timeout
+    description: A timeout for the incoming request
+    type: string
+    optional: false
+    sensitive: false
+    allowMultiple: false
+  - propertyName: failureThreshold
+    name: failureThreshold
+    description: How many failures should happen before trip the circuit (state = OPEN).
+    type: string
+    optional: false
+    sensitive: false
+    allowMultiple: false
+  - propertyName: retryPeriod
+    name: retryPeriod
+    description: What is the time (in seconds) after which we should retry the failed request once the circuit is in OPEN state?
+    type: string
+    optional: false
+    sensitive: false
+    allowMultiple: false
+      

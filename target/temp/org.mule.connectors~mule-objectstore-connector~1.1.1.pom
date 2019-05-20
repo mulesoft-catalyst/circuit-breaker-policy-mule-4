@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.mule.extensions</groupId>
+        <artifactId>mule-core-modules-parent</artifactId>
+        <version>1.1.0</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.mule.connectors</groupId>
+    <artifactId>mule-objectstore-connector</artifactId>
+    <packaging>mule-extension</packaging>
+    <version>1.1.1</version>
+
+    <name>ObjectStore Connector</name>
+    <description>A Mule connector that provides functionality to access, create and manage Object stores</description>
+
+    <properties>
+        <formatterConfigPath>formatter.xml</formatterConfigPath>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>mule</id>
+            <name>Mule Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+        </repository>
+        <repository>
+            <id>spring-snapshot</id>
+            <name>Spring Snapshot Repository</name>
+            <url>http://repo.spring.io/snapshot/</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>mule-plugin</id>
+            <name>Mule Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>

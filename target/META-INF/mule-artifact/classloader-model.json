@@ -1,0 +1,22 @@
+{
+  "version": "1.1.0",
+  "artifactCoordinates": {
+    "groupId": "9033ff23-884a-4352-b75b-14fc8237b2c4",
+    "artifactId": "circuit-breaker-mule-4",
+    "version": "6.0.0-SNAPSHOT",
+    "type": "jar",
+    "classifier": "mule-policy"
+  },
+  "dependencies": [
+    {
+      "artifactCoordinates": {
+        "groupId": "org.mule.connectors",
+        "artifactId": "mule-objectstore-connector",
+        "version": "1.1.1",
+        "type": "jar",
+        "classifier": "mule-plugin"
+      },
+      "uri": "repository/org/mule/connectors/mule-objectstore-connector/1.1.1/mule-objectstore-connector-1.1.1-mule-plugin.jar"
+    }
+  ]
+}
