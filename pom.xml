@@ -4,18 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>9033ff23-884a-4352-b75b-14fc8237b2c4</groupId>
+    <groupId>9033ff23-884a-4352-b75b-14fc8237b2c4</groupId> <!-- Change this value according your ORG ID -->
     <artifactId>circuit-breaker-mule-4</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <name>circuit-breaker-mule-4</name>
-    <description>A lightweight custom policy to implement a Circuit Breaker pattern</description>
+    <description>A custom policy to implement a lightweight Circuit Breaker pattern</description>
 
     <packaging>mule-policy</packaging>
 
     <properties>
         <mule.maven.plugin.version>3.2.7</mule.maven.plugin.version>
-        <exchange.url>https://maven.anypoint.mulesoft.com/api/v1/organizations/9033ff23-884a-4352-b75b-14fc8237b2c4/maven</exchange.url>
+        <exchange.url>https://maven.anypoint.mulesoft.com/api/v1/organizations/9033ff23-884a-4352-b75b-14fc8237b2c4/maven</exchange.url> <!-- Change this value according your ORG ID -->
+        <os.version>1.1.1</os.version>
+        <http.policy.transform.version>1.1.1</http.policy.transform.version>
     </properties>
 
 
@@ -58,15 +60,15 @@
         <dependency>
             <groupId>org.mule.connectors</groupId>
             <artifactId>mule-objectstore-connector</artifactId>
-            <version>1.1.1</version>
+            <version>${os.version}</version>
             <classifier>mule-plugin</classifier>
         </dependency>
-        <!-- <dependency>
+        <dependency>
            <groupId>com.mulesoft.anypoint</groupId>
            <artifactId>mule-http-policy-transform-extension</artifactId>
-           <version>1.0.0</version>
+           <version>${http.policy.transform.version}</version>
            <classifier>mule-plugin</classifier>
-       </dependency> -->
+       </dependency>
     </dependencies>
 
     <distributionManagement>

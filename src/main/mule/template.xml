@@ -27,7 +27,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
         <http-policy:source>
            <try>
               <!-- Checking Cache for OPEN| HALF-OPEN stored value -->
-              <os:retrieve key="circuit" target="circuit" objectStore="cbstore"/>
+              <os:retrieve key="${apiId}" target="circuit" objectStore="cbstore"/>
               <error-handler>
                  <on-error-continue type="OS:KEY_NOT_FOUND" logException="true"> 
                     <logger message="Circuit is CLOSED. Continue processing." />
@@ -39,7 +39,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                   <try>
                     <logger message="Before calling app" />
                     <http-policy:execute-next/>
-                    <os:remove key="circuit" objectStore="cbstore"/>
+                    <os:remove key="${apiId}" objectStore="cbstore"/>
                     <logger message="After calling app" />
                     <error-handler>
                       <on-error-propagate type="ANY" logException="true">
@@ -55,15 +55,15 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                             "timestamp": now(),
                                             "errorCount": ((vars.circuit.errorCount default 0) + 1)
                                            }]' variableName="circuit"/>
-                                  <os:store key="circuit" objectStore="cbstore">
+                                  <os:store key="${apiId}" objectStore="cbstore">
                                      <os:value>
                                          #[vars.circuit]
                                      </os:value>
                                   </os:store>
                                    <set-payload value='#["circuitBreaker": vars.circuit]' mimeType="application/json" />
-                                  <!-- <http-transform:set-response statusCode="503">
+                                   <http-transform:set-response statusCode="503">
                                       <http-transform:body>#["circuitBreaker": vars.circuit]</http-transform:body>
-                                  </http-transform:set-response> -->
+                                  </http-transform:set-response>
                       </on-error-propagate> 
                       <on-error-continue type="OS:KEY_NOT_FOUND" logException="true"> 
                         <logger message="Circuit is CLOSED. Continue processing." />
@@ -76,9 +76,9 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
   output application/json
   ---
   "circuitBreaker": vars.circuit]' mimeType="application/json" />
-                  <!--<http-transform:set-response statusCode="503">
+                  <http-transform:set-response statusCode="503">
                       <http-transform:body>#["circuitBreaker": vars.circuit]</http-transform:body>
-                  </http-transform:set-response> -->
+                  </http-transform:set-response>
                 </otherwise>
             </choice>
         </http-policy:source>
