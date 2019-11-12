@@ -60,9 +60,8 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                          #[vars.circuit]
                                      </os:value>
                                   </os:store>
-                                   <set-payload value='#["circuitBreaker": vars.circuit]' mimeType="application/json" />
                                    <http-transform:set-response statusCode="503">
-                                      <http-transform:body>#["circuitBreaker": vars.circuit]</http-transform:body>
+                                      <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "$(error.description)"]</http-transform:body>
                                   </http-transform:set-response>
                       </on-error-propagate> 
                       <on-error-continue type="OS:KEY_NOT_FOUND" logException="true"> 
@@ -72,12 +71,8 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                   </try> 
                 </when>
                 <otherwise>
-                   <set-payload value='#[%dw 2.0
-  output application/json
-  ---
-  "circuitBreaker": vars.circuit]' mimeType="application/json" />
                   <http-transform:set-response statusCode="503">
-                      <http-transform:body>#["circuitBreaker": vars.circuit]</http-transform:body>
+                      <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "The circuit is still open, not propagating new requests until " ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
                   </http-transform:set-response>
                 </otherwise>
             </choice>

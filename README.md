@@ -34,6 +34,34 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 | failureThreshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
 | retryPeriod | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
 
+Once applied, the policy will return the following structure when an error occurs in the application (if it is propagated):
+
+```
+HTTP/1.0 503 Service Unavailable
+Content-Type:application/json; charset=UTF-8
+transfer-encoding:chunked
+Connection:keep-alive
+
+{
+    "circuitBreaker": {
+        "timeout": 60,
+        "failureThreshold": 1,
+        "retryPeriod": 20,
+        "state": "OPEN",
+        "timestamp": "2019-11-12T14:59:42.942Z",
+        "errorCount": 5,
+        "error": "meaningful message"
+    }
+}
+```
+
+All values ​​are self-explanatory except for errorCount. This value is a counter and stores the amount of requests that has been sent to the API and has failed, opening the circuit again. Other field that deserves an explanation is error. If the underlying API is who is tripping the circuit for the inmmediate request, then the error is populated with error.description value propagated by the protected API. If other case the error is returned by the policy itself saying "The circuit is still open, not propagating new requests until ${DATE}". 
+
+Please refer to the following sequence diagram for an example:
+![](./docs/images/sequence.png)
+
+
+
 #### Development
 
 The following commands are required during development phase
