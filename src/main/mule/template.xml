@@ -43,11 +43,14 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                     <logger message="After calling app" />
                     <error-handler>
                       <on-error-propagate type="ANY" logException="true">
-                                  <!-- Trip the Circuit -->
+                        <flow-ref name="logger-flow"/>
+                        <choice>
+                          <when expression="#[%dw 2.0 output application/json var exceptionsArray=(({{{exceptionsArray}}} replace ' ' with '') splitBy  ',') as Array --- (exceptionsArray contains (error.errorType.namespace ++ ':' ++ error.errorType.identifier) ) or ( (sizeOf(exceptionsArray) == 1) and (exceptionsArray contains 'ANY'))]">
+                                    <!-- Trip the Circuit -->
                                   <set-variable value='#[%dw 2.0
-  output application/json
-  --- 
-  {
+                                          output application/json
+                                          --- 
+                                          {
                                             "timeout": {{{timeout}}},
                                             "failureThreshold": {{{failureThreshold}}},
                                             "retryPeriod": {{{retryPeriod}}},
@@ -63,6 +66,14 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                    <http-transform:set-response statusCode="503">
                                       <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "$(error.description)"]</http-transform:body>
                                   </http-transform:set-response>
+                            </when>
+                          <otherwise>
+                            <logger message="Exception not included in the Exceptions Array"/>
+                              <http-transform:set-response statusCode="500">
+                                  <http-transform:body>#[%dw 2.0 output application/json --- error.description]</http-transform:body>
+                              </http-transform:set-response>
+                          </otherwise>      
+                        </choice>    
                       </on-error-propagate> 
                       <on-error-continue type="OS:KEY_NOT_FOUND" logException="true"> 
                         <logger message="Circuit is CLOSED. Continue processing." />
@@ -78,4 +89,8 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
             </choice>
         </http-policy:source>
     </http-policy:proxy>
+
+    <flow name="logger-flow" >
+      <logger level="INFO" message="#[%dw 2.0 output application/json --- (error.errorType.namespace ++ ':' ++ error.errorType.identifier)]"/>
+    </flow>
 </mule>
