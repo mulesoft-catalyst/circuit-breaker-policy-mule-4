@@ -5,6 +5,7 @@ This is a custom policy that implements a lightweight Circuit Breaker pattern fo
   - Define an error threshold giving your API the flexibility to fail as many times you defined before tripping the circuit
   - Define a retry period after which the protected API should allow incoming requests.
   - Define a timeout for the incoming requests (WIP)
+  - Perform dynamic exception handling
 
 ### Why?
 When working on layered architecture (API Led is a good example) it doesn't make sense to propagate the incoming requests when we know that some component of this architecture is not working correctly. This policy provides an entry point for the consumer, preventing spreading calls through the different layers, giving time to failing resources to recover.
@@ -33,6 +34,7 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 | timeout| WIP.see todo's. Specify the maximum number of seconds that a consumer can wait after sending a request|
 | failureThreshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
 | retryPeriod | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
+| exceptionsArray | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
 
 Once applied, the policy will return the following structure when an error occurs in the application (if it is propagated):
 
@@ -86,7 +88,6 @@ Just fork the repo, make your updates and open a pull request!
  - Write Tests
  - Add intemediate HALF-OPEN state for the circuit
  - Improve performance
- - Add capabilities, like dynamic exception handling (currently the policy is catching only ANY error types)
 
 License
 ----
