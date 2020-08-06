@@ -72,26 +72,21 @@ Connection:keep-alive
 }
 ```
 
-Response message for different Circuit Breaker states
+**Response body for different Circuit Breaker states**
 
 ##### CLOSED
 ```
-HTTP/1.0 503 Service Unavailable
-Content-Type:application/json; charset=UTF-8
-transfer-encoding:chunked
-Connection:keep-alive
-
-{
-  "circuitBreaker": {
-    "timeout": 30,
-    "failureThreshold": 5,
-    "retryPeriod": 30,
-    "state": "CLOSED",
-    "timestamp": "2020-08-06T13:58:09.875-07:00",
-    "errorCount": 1,
-    "error": "HTTP GET on resource 'http://httpstat.us:80/400' failed: bad request (400)."
-  }
-}
+    {
+      "circuitBreaker": {
+        "timeout": 30,
+        "failureThreshold": 5,
+        "retryPeriod": 30,
+        "state": "CLOSED",
+        "timestamp": "2020-08-06T13:58:09.875-07:00",
+        "errorCount": 1,
+        "error": "HTTP GET on resource 'http://httpstat.us:80/400' failed: bad request (400)."
+      }
+    }
 ```
 
 ##### OPEN
