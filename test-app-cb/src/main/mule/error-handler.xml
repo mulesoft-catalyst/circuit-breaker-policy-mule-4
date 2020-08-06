@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+
+	<error-handler name="GLOBAL_ERR_HANDLER" doc:id="f8814faf-63e4-4bb3-b673-f2fe6868c849" >
+		
+		
+
+		
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="deeda07a-9d7c-4a83-bc08-661312910b98" type="PLUGIN:TEST">
+			<ee:transform doc:name="Transform Message" doc:id="19427bea-1e5c-4e75-a6b0-f955075aa3ec">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{"error_code": "300",	"error_message": "Generating Random Error..."}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[300]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="e9cdd739-85d8-43f4-8686-898844359f5a" message="httpStatus: #[vars.httpStatus]" />
+
+		</on-error-continue>
+		
+		
+		
+	</error-handler>
+
+</mule>

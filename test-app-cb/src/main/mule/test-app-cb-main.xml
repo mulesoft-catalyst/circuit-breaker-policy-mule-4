@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+
+	<flow name="health-check" doc:id="39d6aaaa-f89e-474b-a910-e559e24d7ed9">
+		<http:listener doc:name="Listener" doc:id="8be28ad4-d472-48ee-8838-07105c855938" config-ref="apiHttpListenerConfig"
+			path="${api.basepath}/alive">
+			<http:response statusCode="#[vars.httpStatus default 200]">
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"x-transaction-id" : vars.transactionId
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]">
+				<http:body><![CDATA[#[payload]]]></http:body>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"x-transaction-id" : vars.transactionId
+}]]]></http:headers>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[attributes.headers.'x-transaction-id' default correlationId]" doc:name="transactionId"
+			doc:id="0c0381b6-1ae2-4cf9-b449-c03fd5454890" variableName="transactionId" />
+		<choice doc:name="Choice" doc:id="06a1fbaf-1266-4d90-9f0f-23b7bb01002b">
+			<when expression="#[attributes.headers.triggerFail]">
+			<logger level="INFO" doc:name="Introduced Failure" doc:id="c2acac16-cff3-498b-a9d1-9a1145e02eea" message='#["Introduced Failure!"]'
+					category="health-check" />
+				<http:request method="GET" doc:name="Request" doc:id="f0483c74-346d-4579-935b-3142c607ada9"
+					config-ref="HTTP_Request_configuration" path="/400">
+					<http:response-validator>
+						<http:success-status-code-validator values="0..200" />
+					</http:response-validator>
+				</http:request>			</when>
+			<when expression="#[isEven(randomInt(1000))]">
+				<logger level="INFO" doc:name="Success" doc:id="0de126dc-6b09-458d-811f-624967c6d036" message='#["Health Check Successful!"]'
+					category="health-check" />
+			</when>
+			<when expression="#[((randomInt(1000) mod 3) == 0)]">
+				<logger level="INFO" doc:name="Random Failure" doc:id="95558a74-1769-4076-aa0e-1171c282c753" message='#["Usual Failure!"]'
+					category="health-check" />
+				<raise-error doc:name="Raise error" doc:id="6f6fa970-928a-4528-88af-4285b7f8eaaf" type="PLUGIN:TEST" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Bad Request" doc:id="9f613faf-be46-4315-8ff0-aeb192b5ac4b" message="Generating Error!!!" category="health-check"/>
+				<http:request method="GET" doc:name="Request" doc:id="c7847898-c077-4256-ad4a-5a3eada57b40"
+					config-ref="HTTP_Request_configuration" path="/400">
+					<http:response-validator>
+						<http:success-status-code-validator values="0..200" />
+					</http:response-validator>
+				</http:request>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="f384a252-8c8a-4086-a065-ddc6b3dcc5f1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import dw::System
+output application/json
+---
+{
+  status: "200",
+  env: System::envVar("WRAPPER_HOST_NAME"),
+  env: p('http.host'),
+  message: "Alive"
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[200]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+
+
+</mule>

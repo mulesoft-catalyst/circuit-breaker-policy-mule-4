@@ -29,6 +29,8 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 * Filter by 'Custom' category and select 'circuit-breaker-mule-4'. Click on 'Configure Policy' button
 * Give value to the policy's parameters:
 
+![](./docs/images/cb_policy.gif)
+
 | Parameter | Purpose |
 | ------ | ------ |
 | timeout| WIP.see todo's. Specify the maximum number of seconds that a consumer can wait after sending a request|
@@ -36,7 +38,20 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 | retryPeriod | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
 | exceptionsArray | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
 
-Once applied, the policy will return the following structure when an error occurs in the application (if it is propagated):
+### Testing the Policy in Studio
+
+* Use the attached mule-application `test-app-cb` to test the policy.
+* Configure the application to use the `api.id`
+    ```
+       -Dhttp.port=8089
+       -Danypoint.platform.client_id=<<CLIENT_ID>>
+       -Danypoint.platform.client_secret=<<CLIENT_SECRET>>
+       -Dapi.id=<<API ID>>
+    ```
+     
+* `curl --location --request GET 'http://localhost:8089/alive' --header 'triggerFail: true'`
+
+Once applied, the policy will return the following structure when an error listed in the `exceptionsArray` occurs in the application (if it is propagated):
 
 ```
 HTTP/1.0 503 Service Unavailable
@@ -45,16 +60,68 @@ transfer-encoding:chunked
 Connection:keep-alive
 
 {
-    "circuitBreaker": {
-        "timeout": 60,
-        "failureThreshold": 1,
-        "retryPeriod": 20,
-        "state": "OPEN",
-        "timestamp": "2019-11-12T14:59:42.942Z",
-        "errorCount": 5,
-        "error": "meaningful message"
-    }
+  "circuitBreaker": {
+    "timeout": 30,
+    "failureThreshold": 5,
+    "retryPeriod": 30,
+    "state": "CLOSED",
+    "timestamp": "2020-08-06T13:58:09.875-07:00",
+    "errorCount": 1,
+    "error": "HTTP GET on resource 'http://httpstat.us:80/400' failed: bad request (400)."
+  }
 }
+```
+
+Response message for different Circuit Breaker states
+
+##### CLOSED
+```
+HTTP/1.0 503 Service Unavailable
+Content-Type:application/json; charset=UTF-8
+transfer-encoding:chunked
+Connection:keep-alive
+
+{
+  "circuitBreaker": {
+    "timeout": 30,
+    "failureThreshold": 5,
+    "retryPeriod": 30,
+    "state": "CLOSED",
+    "timestamp": "2020-08-06T13:58:09.875-07:00",
+    "errorCount": 1,
+    "error": "HTTP GET on resource 'http://httpstat.us:80/400' failed: bad request (400)."
+  }
+}
+```
+
+##### OPEN
+```
+    {
+      "circuitBreaker": {
+        "timeout": 30,
+        "failureThreshold": 5,
+        "retryPeriod": 30,
+        "state": "OPEN",
+        "timestamp": "2020-08-06T13:58:48.9-07:00",
+        "errorCount": 6,
+        "error": "The circuit is still open, not propagating new requests until 2020-08-06T13:59:18.9-07:00"
+      }
+    }
+```
+
+##### HALF-OPEN
+```
+    {
+      "circuitBreaker": {
+        "timeout": 30,
+        "failureThreshold": 5,
+        "retryPeriod": 30,
+        "state": "HALF-OPEN",
+        "timestamp": "2020-08-06T14:02:00.147-07:00",
+        "errorCount": 7,
+        "error": "HTTP GET on resource 'http://httpstat.us:80/400' failed: bad request (400)."
+      }
+    }
 ```
 
 All values ​​are self-explanatory except for errorCount. This value is a counter and stores the amount of requests that has been sent to the API and has failed, opening the circuit again. Other field that deserves an explanation is error. If the underlying API is who is tripping the circuit for the inmmediate request, then the error is populated with error.description value propagated by the protected API. If other case the error is returned by the policy itself saying "The circuit is still open, not propagating new requests until ${DATE}". 
@@ -76,7 +143,6 @@ The following commands are required during development phase
 ##### Dependencies
 This policy uses a persistent Object Store as a key value database that allows maintaining the state of the circuit at every time. It also uses the http transport extension module, to perform the update of headers in the response in case of error.
 
-
 ### Contribution
 
 Want to contribute? Great!
@@ -86,7 +152,6 @@ Just fork the repo, make your updates and open a pull request!
 ### Todos
  - Add timeout capability
  - Write Tests
- - Add intemediate HALF-OPEN state for the circuit
  - Improve performance
 
 License

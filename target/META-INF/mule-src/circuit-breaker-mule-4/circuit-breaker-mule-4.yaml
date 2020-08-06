@@ -30,4 +30,14 @@ configuration:
     optional: false
     sensitive: false
     allowMultiple: false
+  - propertyName: exceptionsArray
+    name: exceptionsArray
+    description: |
+        Specify all the error types that can trip the circuit. The default value is ANY, and means that any exception occurred in the protected application will trigger the circuit.
+        Expect a comma separated string. Example: "MULE:EXPRESSION, HTTP:UNAUTHORIZED". Double quotes are required. Spaces between types are not required.
+    type: string
+    defaultValue: '"ANY"'
+    optional: true
+    sensitive: false
+    allowMultiple: false
       

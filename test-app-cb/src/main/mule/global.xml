@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+
+	<http:listener-config name="apiHttpListenerConfig">
+		<http:listener-connection host="${http.host}" port="${http.port}"/>
+	</http:listener-config>
+
+
+	<configuration-properties doc:name="Env-independent Configuration properties"
+		doc:id="dc4e8ab2-0695-4603-b723-357c7ed121d4" file="properties.yaml" />
+	<api-gateway:autodiscovery apiId="${api.id}" doc:name="API Autodiscovery"
+		doc:id="f19c7af9-3dac-4017-a015-95f493a42b44" flowRef="health-check" ignoreBasePath="true" />
+
+
+	<configuration doc:name="Configuration" doc:id="206b517d-5bbd-420e-9721-0be1f9e9b943"
+		defaultErrorHandler-ref="GLOBAL_ERR_HANDLER" />
+
+
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration"
+		doc:id="ad7291de-fd04-4a76-9748-70aeb2526b18">
+		<http:request-connection host="${statusService.host}" port="${statusService.port}" />
+	</http:request-config>
+
+
+</mule>

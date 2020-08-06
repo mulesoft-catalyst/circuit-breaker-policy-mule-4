@@ -4,7 +4,7 @@
   ],
   "secureProperties": [],
   "redeploymentEnabled": true,
-  "name": "9033ff23-884a-4352-b75b-14fc8237b2c4:circuit-breaker-mule-4:6.0.0-SNAPSHOT",
+  "name": "918a0c38-c335-47aa-9ab8-f3d2c2f07c2a:circuit-breaker-mule-4:1.0.1",
   "minMuleVersion": "4.1.1",
   "requiredProduct": "MULE_EE",
   "classLoaderModelLoaderDescriptor": {
@@ -14,11 +14,11 @@
   "bundleDescriptorLoader": {
     "id": "mule",
     "attributes": {
-      "groupId": "9033ff23-884a-4352-b75b-14fc8237b2c4",
+      "groupId": "918a0c38-c335-47aa-9ab8-f3d2c2f07c2a",
       "classifier": "mule-policy",
       "artifactId": "circuit-breaker-mule-4",
       "type": "jar",
-      "version": "6.0.0-SNAPSHOT"
+      "version": "1.0.1"
     }
   }
 }
