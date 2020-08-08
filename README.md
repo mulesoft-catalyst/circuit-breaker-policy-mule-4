@@ -72,6 +72,8 @@ Connection:keep-alive
 
 **Response body for different Circuit Breaker States**
 
+![](./docs/images/cb_states.png)
+
 ##### CLOSED
 ```
     {
