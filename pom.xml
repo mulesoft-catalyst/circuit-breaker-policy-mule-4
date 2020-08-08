@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>918a0c38-c335-47aa-9ab8-f3d2c2f07c2a</groupId> <!-- Change this value according your ORG ID -->
+    <groupId>com.mulesoft.policies</groupId> <!-- Change this value according your ORG ID -->
     <artifactId>circuit-breaker-mule-4</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.0</version>
 
     <name>circuit-breaker-mule-4</name>
     <description>A custom policy to implement a lightweight Circuit Breaker pattern</description>
