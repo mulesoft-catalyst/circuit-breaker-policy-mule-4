@@ -4,7 +4,7 @@ This is a custom policy that implements a lightweight Circuit Breaker pattern fo
 
   - Define an error threshold giving your API the flexibility to fail as many times you defined before tripping the circuit
   - Define a retry period after which the protected API should allow incoming requests.
-  - Define a timeout for the incoming requests (WIP)
+  - Fail fast after the threshold is reached and service still not functional.
   - Perform dynamic exception handling
 
 ### Why?
@@ -29,11 +29,10 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 * Filter by 'Custom' category and select 'circuit-breaker-mule-4'. Click on 'Configure Policy' button
 * Give value to the policy's parameters:
 
-![](./docs/images/cb_policy.gif)
+![](./docs/images/apply_cb_policy.gif)
 
 | Parameter | Purpose |
 | ------ | ------ |
-| timeout| WIP.see todo's. Specify the maximum number of seconds that a consumer can wait after sending a request|
 | failureThreshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
 | retryPeriod | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
 | exceptionsArray | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
@@ -47,9 +46,9 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
        -Danypoint.platform.client_id=<<CLIENT_ID>>
        -Danypoint.platform.client_secret=<<CLIENT_SECRET>>
        -Dapi.id=<<API ID>>
-    ```
-     
-* `curl --location --request GET 'http://localhost:8089/alive' --header 'triggerFail: true'`
+    ```    
+* To simulate failure run: `curl --location --request GET 'http://localhost:8089/alive' --header 'triggerFail: true'`
+* For random test run: `curl --location --request GET 'http://localhost:8089/alive'`
 
 Once applied, the policy will return the following structure when an error listed in the `exceptionsArray` occurs in the application (if it is propagated):
 
@@ -61,7 +60,6 @@ Connection:keep-alive
 
 {
   "circuitBreaker": {
-    "timeout": 30,
     "failureThreshold": 5,
     "retryPeriod": 30,
     "state": "CLOSED",
@@ -72,13 +70,12 @@ Connection:keep-alive
 }
 ```
 
-**Response body for different Circuit Breaker states**
+**Response body for different Circuit Breaker States**
 
 ##### CLOSED
 ```
     {
       "circuitBreaker": {
-        "timeout": 30,
         "failureThreshold": 5,
         "retryPeriod": 30,
         "state": "CLOSED",
@@ -93,7 +90,6 @@ Connection:keep-alive
 ```
     {
       "circuitBreaker": {
-        "timeout": 30,
         "failureThreshold": 5,
         "retryPeriod": 30,
         "state": "OPEN",
@@ -108,7 +104,6 @@ Connection:keep-alive
 ```
     {
       "circuitBreaker": {
-        "timeout": 30,
         "failureThreshold": 5,
         "retryPeriod": 30,
         "state": "HALF-OPEN",
@@ -135,6 +130,8 @@ The following commands are required during development phase
 | Package policy| mvn clean install |
 | Publish to Exchange | mvn deploy |
 
+**Note**: *Delete the target folder after deploying to exchange, if deploying the policy to multiple groups.*
+
 ##### Dependencies
 This policy uses a persistent Object Store as a key value database that allows maintaining the state of the circuit at every time. It also uses the http transport extension module, to perform the update of headers in the response in case of error.
 
@@ -145,10 +142,11 @@ Want to contribute? Great!
 Just fork the repo, make your updates and open a pull request!
 
 ### Todos
- - Add timeout capability
  - Write Tests
  - Improve performance
 
 License
 ----
 MIT
+
+:metal:

@@ -9,13 +9,6 @@ standalone: true
 requiredCharacteristics: []
 providedCharacteristics: []
 configuration:
-  - propertyName: timeout
-    name: timeout
-    description: A timeout for the incoming request
-    type: string
-    optional: false
-    sensitive: false
-    allowMultiple: false
   - propertyName: failureThreshold
     name: failureThreshold
     description: How many failures should happen before trip the circuit (state = OPEN).

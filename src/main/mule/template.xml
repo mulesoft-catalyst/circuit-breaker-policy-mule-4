@@ -54,7 +54,6 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                           var state = if((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}}) "CLOSED" else if ((vars.circuit.errorCount default 0) &gt; {{{failureThreshold}}}) "HALF-OPEN" else "OPEN"
                                           ---
                                           {
-                                            "timeout": {{{timeout}}},
                                             "failureThreshold": {{{failureThreshold}}},
                                             "retryPeriod": {{{retryPeriod}}},
                                             "state": state,
