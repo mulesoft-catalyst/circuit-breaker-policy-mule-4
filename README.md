@@ -11,9 +11,10 @@ This is a custom policy that implements a lightweight Circuit Breaker pattern fo
 When working on layered architecture (API Led is a good example) it doesn't make sense to propagate the incoming requests when we know that some component of this architecture is not working correctly. This policy provides an entry point for the consumer, preventing spreading calls through the different layers, giving time to failing resources to recover.
 
 ### How?
-This policy handles a deterministic model that indicate the state of the circuit. It uses the Mule Object Store (OS) to save and retrieve the values after each call.
+This policy handles a deterministic model that indicates the state of the circuit. It uses the Mule Object Store (OS) to save and retrieve the values after each call.
 
-This way, when the OS is initializated is using the ${appId} property as key, as shown below:
+This way, when the OS is initialized is using the ${appId} property as key, as shown below:
+
 ![](./docs/images/cbstore.png)
 
 This ensure that every application that uses this policy has isolated circuit state values.
@@ -139,7 +140,7 @@ This policy uses a persistent Object Store as a key value database that allows m
 
 ### Contribution
 
-Want to contribute? Great!
+Want to contribute? Great :metal:
 
 Just fork the repo, make your updates and open a pull request!
 
@@ -150,5 +151,3 @@ Just fork the repo, make your updates and open a pull request!
 License
 ----
 MIT
-
-:metal:
