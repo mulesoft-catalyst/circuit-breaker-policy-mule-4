@@ -81,8 +81,8 @@ This policy uses a persistent Object Store as a key value database that allows m
 
 Want to contribute? Great!
 
-For public contributions - Just fork the repo, make your updates and open a pull request!
-For internal contributions - Use a simplified feature workflow following these steps:
+* For public contributions - Just fork the repo, make your updates and open a pull request!
+* For internal contributions - Use a simplified feature workflow following these steps:
    - Clone your repo
    - Create a feature branch using the naming convention feature/name-of-the-feature
    - Once it's ready, push your changes
