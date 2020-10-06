@@ -31,7 +31,6 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 
 | Parameter | Purpose |
 | ------ | ------ |
-| timeout| WIP.see todo's. Specify the maximum number of seconds that a consumer can wait after sending a request|
 | failureThreshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
 | retryPeriod | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
 | exceptionsArray | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
@@ -46,7 +45,6 @@ Connection:keep-alive
 
 {
     "circuitBreaker": {
-        "timeout": 60,
         "failureThreshold": 1,
         "retryPeriod": 20,
         "state": "OPEN",
