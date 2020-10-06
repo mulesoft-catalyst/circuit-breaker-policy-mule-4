@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://www.mulesoft.org/schema/mule/core"
-xmlns:os="http://www.mulesoft.org/schema/mule/os"
-xmlns:http="http://www.mulesoft.org/schema/mule/http"
-xmlns:http-policy="http://www.mulesoft.org/schema/mule/http-policy"
-xmlns:http-transform="http://www.mulesoft.org/schema/mule/http-policy-transform"
-xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:http-policy="http://www.mulesoft.org/schema/mule/http-policy" xmlns:http-transform="http://www.mulesoft.org/schema/mule/http-policy-transform"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core
 http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http
 http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
@@ -16,81 +12,89 @@ http://www.mulesoft.org/schema/mule/http-policy-transform/current/mule-http-poli
 http://www.mulesoft.org/schema/mule/os
 http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 
- <!-- Object Store configuration -->
- <os:object-store name="cbstore"
- persistent="true"
- entryTtl="1"
- entryTtlUnit="HOURS"/>
-
+    <!-- Object Store configuration -->
+    <os:object-store name="cbstore" persistent="true" entryTtl="1" entryTtlUnit="HOURS" />
 
     <http-policy:proxy name="{{{policyId}}}-custom-policy">
         <http-policy:source>
-           <try>
-              <!-- Checking Cache for OPEN| HALF-OPEN stored value -->
-              <os:retrieve key="${apiId}" target="circuit" objectStore="cbstore"/>
-              <error-handler>
-                 <on-error-continue type="OS:KEY_NOT_FOUND" logException="true"> 
-                    <logger message="Circuit is CLOSED. Continue processing." />
-                 </on-error-continue>
-              </error-handler> 
-            </try> 
+            <try>
+                <!-- Checking Cache for OPEN| HALF-OPEN stored value -->
+                <os:retrieve key="${apiId}" target="circuit"  objectStore="cbstore" />
+                <error-handler>
+                    <on-error-continue type="OS:KEY_NOT_FOUND" logException="false" >
+                        <logger message="Circuit is CLOSED. Continue processing. Before execution" level="DEBUG" category="com.mule.policies.circuitbreaker" />
+                    </on-error-continue>
+                </error-handler>
+            </try>
             <choice>
-              <when expression="#[((sizeOf(vars.circuit default '') == 0) or ((vars.circuit.timestamp default 0) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) or ((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}})]">
-                  <try>
-                    <logger message="Before calling app" />
-                    <http-policy:execute-next/>
-                    <os:remove key="${apiId}" objectStore="cbstore"/>
-                    <logger message="After calling app" />
-                    <error-handler>
-                      <on-error-propagate type="ANY" logException="true">
-                        <flow-ref name="logger-flow"/>
+                <!--  Condition to allow the application call  -->
+                <when expression="#[((sizeOf(vars.circuit default '') == 0) or ((vars.circuit.timestamp default 0) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) or ((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}})]">
+                    <try>
+                        <logger message="http-policy:execute-next" level="DEBUG" category="com.mule.policies.circuitbreaker"/>
+                        <http-policy:execute-next />
                         <choice>
-                          <when expression="#[%dw 2.0 output application/json var exceptionsArray=(({{{exceptionsArray}}} replace ' ' with '') splitBy  ',') as Array --- (exceptionsArray contains (error.errorType.namespace ++ ':' ++ error.errorType.identifier) ) or ( (sizeOf(exceptionsArray) == 1) and (exceptionsArray contains 'ANY'))]">
-                                    <!-- Trip the Circuit -->
-                                  <set-variable value='#[%dw 2.0
+                            <when expression="#[vars.circuit == null]">
+                                <logger message="no circuitBreaker" level="DEBUG" category="com.mule.policies.circuitbreaker"></logger>
+                            </when>
+                            <otherwise>
+                                <logger message="http-policy:execute-next completed. Removing cached circuit" level="DEBUG" category="com.mule.policies.circuitbreaker"></logger>
+                                <os:remove key="${apiId}" objectStore="cbstore"  />
+                            </otherwise>
+                        </choice>
+                        <error-handler>
+                            <on-error-propagate type="ANY" logException="true">
+                                <flow-ref name="error-logger" />
+                                <choice>
+                                    <when expression="#[%dw 2.0 output application/json var exceptionsArray=(({{{exceptionsArray}}} replace ' ' with '') splitBy  ',') as Array --- (exceptionsArray contains (error.errorType.namespace ++ ':' ++ error.errorType.identifier) ) or ( (sizeOf(exceptionsArray) == 1) and (exceptionsArray contains 'ANY'))]">
+                                        <!-- Trip the Circuit -->
+                                        <set-variable value='#[%dw 2.0
                                           output application/json
-                                          --- 
+                                          var state = if((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}}) "CLOSED" 
+                                                      else if ( ((vars.circuit.errorCount default 0) &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) "HALF-OPEN" 
+                                                      else "OPEN"
+                                          ---
                                           {
-                                            "timeout": {{{timeout}}},
                                             "failureThreshold": {{{failureThreshold}}},
                                             "retryPeriod": {{{retryPeriod}}},
-                                            "state": "OPEN",
+                                            "state": state,
                                             "timestamp": now(),
                                             "errorCount": ((vars.circuit.errorCount default 0) + 1)
-                                           }]' variableName="circuit"/>
-                                  <os:store key="${apiId}" objectStore="cbstore">
-                                     <os:value>
-                                         #[vars.circuit]
-                                     </os:value>
-                                  </os:store>
-                                   <http-transform:set-response statusCode="503">
-                                      <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "$(error.description)"]</http-transform:body>
-                                  </http-transform:set-response>
-                            </when>
-                          <otherwise>
-                            <logger message="Exception not included in the Exceptions Array"/>
-                              <http-transform:set-response statusCode="500">
-                                  <http-transform:body>#[%dw 2.0 output application/json --- error.description]</http-transform:body>
-                              </http-transform:set-response>
-                          </otherwise>      
-                        </choice>    
-                      </on-error-propagate> 
-                      <on-error-continue type="OS:KEY_NOT_FOUND" logException="true"> 
-                        <logger message="Circuit is CLOSED. Continue processing." />
-                      </on-error-continue>
-                    </error-handler>
-                  </try> 
+                                           }]'
+                                                      variableName="circuit" />
+                                        <os:store key="${apiId}" objectStore="cbstore">
+                                            <os:value>
+                                                #[vars.circuit]
+                                            </os:value>
+                                        </os:store>
+                                        <http-transform:set-response statusCode="503">
+                                            <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "$(error.description)"]</http-transform:body>
+                                        </http-transform:set-response>
+                                    </when>
+                                    <otherwise>
+                                        <logger message="Exception not included in the Exceptions Array" level="DEBUG" category="com.mule.policies.circuitbreaker" />
+                                        <http-transform:set-response statusCode="500">
+                                            <http-transform:body>#[%dw 2.0 output application/json --- error.description]</http-transform:body>
+                                        </http-transform:set-response>
+                                    </otherwise>
+                                </choice>
+                            </on-error-propagate>
+                            <on-error-continue type="OS:KEY_NOT_FOUND" logException="false">
+                                <logger message="Circuit state is CLOSED. Continue processing."  level="DEBUG" category="com.mule.policies.circuitbreaker"/>
+                            </on-error-continue>
+                        </error-handler>
+                    </try>
                 </when>
                 <otherwise>
-                  <http-transform:set-response statusCode="503">
-                      <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "The circuit is still open, not propagating new requests until " ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
-                  </http-transform:set-response>
+                    <http-transform:set-response statusCode="503">
+                        <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "The circuit is still open, not propagating new requests until "
+                            ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
+                    </http-transform:set-response>
                 </otherwise>
             </choice>
         </http-policy:source>
     </http-policy:proxy>
 
-    <flow name="logger-flow" >
-      <logger level="INFO" message="#[%dw 2.0 output application/json --- (error.errorType.namespace ++ ':' ++ error.errorType.identifier)]"/>
+    <flow name="error-logger">
+        <logger level="ERROR" message="#[%dw 2.0 output application/json --- errorMessage:  (error.errorType.namespace ++ ':' ++ error.errorType.identifier)]" category="com.mule.policies.circuitbreaker" />
     </flow>
 </mule>
