@@ -4,7 +4,7 @@ This is a custom policy that implements a lightweight Circuit Breaker pattern fo
 
   - Define an error threshold giving your API the flexibility to fail as many times you defined before tripping the circuit
   - Define a retry period after which the protected API should allow incoming requests.
-  - Define a timeout for the incoming requests (WIP)
+  - Set the circuit to HALF-OPEN state after the threshold is reached and service is still not functional
   - Perform dynamic exception handling
 
 ### Why?
@@ -81,14 +81,13 @@ This policy uses a persistent Object Store as a key value database that allows m
 
 Want to contribute? Great!
 
-Just fork the repo, make your updates and open a pull request!
+For public contributions - Just fork the repo, make your updates and open a pull request!
+For internal contributions - Use a simplified feature workflow following these steps:
+   - Clone your repo
+   - Create a feature branch using the naming convention feature/name-of-the-feature
+   - Once it's ready, push your changes
+   - Open a pull request for a review
 
 ### Todos
- - Add timeout capability
  - Write Tests
- - Add intemediate HALF-OPEN state for the circuit
  - Improve performance
-
-License
-----
-MIT
