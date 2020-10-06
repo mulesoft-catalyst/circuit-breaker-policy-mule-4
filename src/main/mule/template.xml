@@ -71,7 +71,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                         </http-transform:set-response>
                                     </when>
                                     <otherwise>
-                                        <logger message="Exception not included in the Exceptions Array" level="INFO" category="com.mule.policies.circuitbreaker" />
+                                        <logger message="Exception not included in the Exceptions Array" level="DEBUG" category="com.mule.policies.circuitbreaker" />
                                         <http-transform:set-response statusCode="500">
                                             <http-transform:body>#[%dw 2.0 output application/json --- error.description]</http-transform:body>
                                         </http-transform:set-response>
