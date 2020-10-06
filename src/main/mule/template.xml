@@ -21,14 +21,14 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                 <!-- Checking Cache for OPEN| HALF-OPEN stored value -->
                 <os:retrieve key="${apiId}" target="circuit"  objectStore="cbstore" />
                 <error-handler>
-                    <on-error-continue type="OS:KEY_NOT_FOUND" logException="true" >
+                    <on-error-continue type="OS:KEY_NOT_FOUND" logException="false" >
                         <logger message="Circuit is CLOSED. Continue processing. Before execution" level="DEBUG" category="com.mule.policies.circuitbreaker" />
                     </on-error-continue>
                 </error-handler>
             </try>
             <choice>
                 <!--  Condition to allow the application call  -->
-                <when expression="#[((sizeOf(vars.circuit default '') == 0) or ((vars.circuit.timestamp default 0) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) or ((vars.circuit.errorCount default 0) &lt;= {{{failureThreshold}}})]">
+                <when expression="#[((sizeOf(vars.circuit default '') == 0) or ((vars.circuit.timestamp default 0) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) or ((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}})]">
                     <try>
                         <logger message="http-policy:execute-next" level="DEBUG" category="com.mule.policies.circuitbreaker"/>
                         <http-policy:execute-next />
@@ -50,7 +50,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                         <set-variable value='#[%dw 2.0
                                           output application/json
                                           var state = if((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}}) "CLOSED" 
-                                                      else if ( ((vars.circuit.errorCount default 0) &gt; {{{failureThreshold}}}) and ((vars.circuit.timestamp) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) "HALF-OPEN" 
+                                                      else if ( ((vars.circuit.errorCount default 0) &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) "HALF-OPEN" 
                                                       else "OPEN"
                                           ---
                                           {
@@ -78,7 +78,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                     </otherwise>
                                 </choice>
                             </on-error-propagate>
-                            <on-error-continue type="OS:KEY_NOT_FOUND" logException="true">
+                            <on-error-continue type="OS:KEY_NOT_FOUND" logException="false">
                                 <logger message="Circuit state is CLOSED. Continue processing."  level="DEBUG" category="com.mule.policies.circuitbreaker"/>
                             </on-error-continue>
                         </error-handler>
