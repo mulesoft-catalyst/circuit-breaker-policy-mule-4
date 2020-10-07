@@ -49,8 +49,9 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                         <!-- Trip the Circuit -->
                                         <set-variable value='#[%dw 2.0
                                           output application/json
-                                          var state = if((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}}) "CLOSED" 
-                                                      else if ( ((vars.circuit.errorCount default 0) &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) "HALF-OPEN" 
+                                          var currentErrorCount = (vars.circuit.errorCount default 0) + 1
+                                          var state = if(currentErrorCount &lt; {{{failureThreshold}}}) "CLOSED" 
+                                                      else if ( ( (currentErrorCount + 1) &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now())) "HALF-OPEN" 
                                                       else "OPEN"
                                           ---
                                           {
@@ -58,7 +59,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                             "retryPeriod": {{{retryPeriod}}},
                                             "state": state,
                                             "timestamp": now(),
-                                            "errorCount": ((vars.circuit.errorCount default 0) + 1)
+                                            "errorCount": currentErrorCount
                                            }]'
                                                       variableName="circuit" />
                                         <os:store key="${apiId}" objectStore="cbstore">
@@ -86,8 +87,16 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                 </when>
                 <otherwise>
                     <http-transform:set-response statusCode="503">
-                        <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": "The circuit is still open, not propagating new requests until "
-                            ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
+                        <http-transform:body>#[%dw 2.0 
+                                                output application/json 
+                                                --- 
+                                                "circuitBreaker": vars.circuit mapObject ((value, key, index) -> 
+                                                {
+                                                    ((key): value) if(key as String != "timestamp"),
+                                                    (timestamp: now()) if(key as String == "timestamp")
+                                                }
+                                                ) 
+                                                ++ "error": "The circuit is still open, not propagating new requests until " ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
                     </http-transform:set-response>
                 </otherwise>
             </choice>
