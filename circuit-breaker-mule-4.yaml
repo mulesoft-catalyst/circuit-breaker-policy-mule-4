@@ -25,7 +25,7 @@ configuration:
     allowMultiple: false
   - propertyName: evaluateErrorObject
     name: Evaluate the error object to trigger the circuit?
-    description: Select this option if the underlying application propagates the error object
+    description: Select this option if the underlying application propagates the error object.
     type: boolean
     optional: true
     defaultValue: false  
@@ -61,7 +61,7 @@ configuration:
     dependsOnValue: true
   - propertyName: overrideOsSettings
     name: Override Object Store settings?
-    description: Select this option to override default OS settings
+    description: Select this option to override default OS settings.
     type: boolean
     optional: true
     defaultValue: false
