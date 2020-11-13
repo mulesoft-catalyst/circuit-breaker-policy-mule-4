@@ -5,7 +5,7 @@ This is a custom policy that implements a lightweight Circuit Breaker pattern fo
   - Define an error threshold giving your API the flexibility to fail as many times you defined before tripping the circuit
   - Define a retry period after which the protected API should allow incoming requests.
   - Set the circuit to HALF-OPEN state after the threshold is reached and service is still not functional
-  - Perform dynamic exception handling
+  - Perform a dynamic exception handling
 
 ### Why?
 When working on layered architecture (API Led is a good example) it doesn't make sense to propagate the incoming requests when we know that some component of this architecture is not working correctly. This policy provides an entry point for the consumer, preventing spreading calls through the different layers, giving time to failing resources to recover.
@@ -18,22 +18,32 @@ This way, when the OS is initializated is using the ${appId} property as key, as
 
 This ensure that every application that uses this policy has isolated circuit state values.
 
+*NOTE* OS settings can be overriden if needed when configuring the policy.
+
 ### Usage
-After publishing to Exchange, follow these steps to apply the policy to an existing managed API:
+After publishing to Exchange, follow these steps to apply the policy to an existing managed API (or proxy):
 
 * Log into Anypoint Platform
 * Enter API Manager
 * Click on the API version for the application you want to apply the policy to
-* Click on Policies (at your left. No! your other left :P)
+* Click on Policies
 * Click on Apply New Policy
 * Filter by 'Custom' category and select 'circuit-breaker-mule-4'. Click on 'Configure Policy' button
 * Give value to the policy's parameters:
 
 | Parameter | Purpose |
 | ------ | ------ |
-| failureThreshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
-| retryPeriod | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
-| exceptionsArray | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
+| Failure Threshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
+| Retry Period | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
+| Evaluate the error object to trigger the circuit? | - Checkbox - Select this option if the underlying application propagates the error object. E.g. applications not handling errors or raising custom ones on error handling strategies |
+| Exceptions Array | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
+| Evaluate the HTTP response to trigger the circuit? | - Checkbox - Select this option to evaluate the HTTP response (status code). Check this option if evaluate error object option is unchecked.    |
+| HTTP Codes Array | Specify all the HTTP codes that can trip the circuit. The default value is 500 (Internal Server Error). Expect a comma separated string. Example: "500, 401". Double quotes are required but spaces between types are not. |
+| Override Object Store settings? | - Checkbox - Select this option to override default OS settings. Defaut OS will use persistent OS, with 1 hour entry TTL. |
+| Object Store's entry TTL | The entry timeout. Default value is 1 (hour). |
+| Object Store's entry TTL unit | The time unit. Default value is "HOURS". You can choose one of the listed options based on https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html|
+
+Additionally, this policy has the resourceLevelSupported boolean set to true to allow policy support at the resource level.
 
 Once applied, the policy will return the following structure when an error occurs in the application (if it is propagated):
 
@@ -60,7 +70,14 @@ All values ​​are self-explanatory except for errorCount. This value is a cou
 Please refer to the following sequence diagram for an example:
 ![](./docs/images/sequence.png)
 
+### States transition
 
+The transition of states can be explained as follows:
+![](./docs/images/states-transition.png)
+- We start with the circuit in CLOSED state
+- If the underlying service  throws an error, we count it until we reach the maximum number of errors allowed set by the Failure Threshold, then we trip the circuit (OPEN)
+- If a new incoming call arrives, we reject it immediately, unless the timestamp of the last error plus the Retry Period that we have configured exceeds the current timestamp. In that case we transition to HALF-OPEN state and we propagate the incoming request
+- If we get an error from that last call, we increment the counter and transition back to OPEN, but, if the call was sucessfull, we clear the error counter and we transition to CLOSED again
 
 #### Development
 
@@ -73,7 +90,6 @@ The following commands are required during development phase
 
 ##### Dependencies
 This policy uses a persistent Object Store as a key value database that allows maintaining the state of the circuit at every time. It also uses the http transport extension module, to perform the update of headers in the response in case of error.
-
 
 ### Contribution
 
@@ -88,4 +104,3 @@ Want to contribute? Great!
 
 ### Todos
  - Write Tests
- - Improve performance

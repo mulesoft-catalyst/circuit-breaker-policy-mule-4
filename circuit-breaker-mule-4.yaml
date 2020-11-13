@@ -1,6 +1,6 @@
-id: circuit-breaker-mule-4
-name: circuit-breaker-mule-4
-description: A custom policy to implement a lightweight Circuit Breaker pattern
+id: Circuit Breaker
+name: Circuit Breaker
+description: A custom policy to implement a lightweight Circuit Breaker pattern in Mule 4 APIs
 category: Custom
 type: custom
 resourceLevelSupported: true
@@ -10,27 +10,101 @@ requiredCharacteristics: []
 providedCharacteristics: []
 configuration:
   - propertyName: failureThreshold
-    name: failureThreshold
+    name: Failure Threshold
     description: How many failures should happen before trip the circuit (state = OPEN).
     type: string
     optional: false
     sensitive: false
     allowMultiple: false
   - propertyName: retryPeriod
-    name: retryPeriod
+    name: Retry Period
     description: What is the time (in seconds) after which we should retry the failed request once the circuit is in OPEN state?
     type: string
     optional: false
     sensitive: false
     allowMultiple: false
+  - propertyName: evaluateErrorObject
+    name: Evaluate the error object to trigger the circuit?
+    description: Select this option if the underlying application propagates the error object.
+    type: boolean
+    optional: true
+    defaultValue: false  
   - propertyName: exceptionsArray
-    name: exceptionsArray
+    name: Exceptions Array
     description: |
         Specify all the error types that can trip the circuit. The default value is ANY, and means that any exception occurred in the protected application will trigger the circuit.
-        Expect a comma separated string. Example: "MULE:EXPRESSION, HTTP:UNAUTHORIZED". Double quotes are required. Spaces between types are not required.
+        Expect a comma separated string. Example: "MULE:EXPRESSION, HTTP:UNAUTHORIZED". Double quotes are required but spaces between types are not.
     type: string
     defaultValue: '"ANY"'
     optional: true
     sensitive: false
     allowMultiple: false
-      
+    dependsOnKey: evaluateErrorObject
+    dependsOnValue: true
+  - propertyName: evaluateHttpResponse
+    name: Evaluate the HTTP response to trigger the circuit?
+    description: Select this option to evaluate the HTTP response. Check this option if evaluate error object option is unchecked.
+    type: boolean
+    optional: true
+    defaultValue: false  
+  - propertyName: httpCodesArray
+    name: HTTP Codes Array
+    description: |
+        Specify all the HTTP codes that can trip the circuit. The default value is 500 (Internal Server Error).
+        Expect a comma separated string. Example: "500, 401". Double quotes are required but spaces between types are not.
+    type: string
+    defaultValue: '"500"'
+    optional: true
+    sensitive: false
+    allowMultiple: false
+    dependsOnKey: evaluateHttpResponse
+    dependsOnValue: true
+  - propertyName: overrideOsSettings
+    name: Override Object Store settings?
+    description: Select this option to override default OS settings.
+    type: boolean
+    optional: true
+    defaultValue: false
+  - propertyName: osPersistent
+    name: Is the Object Store persistent?
+    description: Select this option to enable a persistent Object Store. The default is false.
+    type: boolean
+    optional: true
+    defaultValue: false
+    dependsOnKey: overrideOsSettings
+    dependsOnValue: true   
+  - propertyName: osTtl
+    name: Object Store's entry TTL
+    description: The entry timeout. Default value is 1 (hour).
+    type: int
+    optional: true
+    sensitive: false
+    allowMultiple: false
+    defaultValue: "1"
+    dependsOnKey: overrideOsSettings
+    dependsOnValue: true  
+  - propertyName: osTtlUnit
+    name: Object Store's entry TTL unit
+    description: The time unit. Default value is "HOURS".
+    options:
+    - name: DAYS
+      value: "DAYS"  
+    - name: HOURS
+      value: "HOURS"
+    - name: MICROSECONDS
+      value: "MICROSECONDS"
+    - name: MILISECONDS
+      value: "MILISECONDS"  
+    - name: MINUTES
+      value: "MINUTES"
+    - name: NANOSECONDS
+      value: "NANOSECONDS"
+    - name: SECONDS
+      value: "SECONDS"
+    type: radio
+    defaultValue: HOURS
+    optional: true
+    sensitive: false
+    allowMultiple: false
+    dependsOnKey: overrideOsSettings
+    dependsOnValue: true  
