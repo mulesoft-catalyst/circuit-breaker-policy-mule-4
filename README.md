@@ -1,22 +1,22 @@
 # Circuit-Breaker Custom Policy
 
-This is a custom policy that implements a lightweight Circuit Breaker pattern for Mule 4. Applying this to your API you would be able to:
+This is a custom policy that implements a lightweight Circuit Breaker pattern for Mule 4. By applying this policy to your API, you would be able to:
 
-  - Define an error threshold giving your API the flexibility to fail as many times you defined before tripping the circuit
-  - Define a retry period after which the protected API should allow incoming requests.
+  - Define an error threshold giving your API the flexibility to fail as many times as you define before tripping the circuit
+  - Define a retry period after which the protected API should allow incoming requests
   - Set the circuit to HALF-OPEN state after the threshold is reached and service is still not functional
   - Perform a dynamic exception handling
 
 ### Why?
-When working on layered architecture (API Led is a good example) it doesn't make sense to propagate the incoming requests when we know that some component of this architecture is not working correctly. This policy provides an entry point for the consumer, preventing spreading calls through the different layers, giving time to failing resources to recover.
+When working on a layered architecture (API Led is a good example) it doesn't make sense to propagate the incoming requests when we know that one of the components of this architecture is not working correctly. This policy provides an entry point for the consumer, preventing spreading calls through the different layers, allowing time to failing resources to recover.
 
 ### How?
-This policy handles a deterministic model that indicate the state of the circuit. It uses the Mule Object Store (OS) to save and retrieve the values after each call.
+This policy handles a deterministic model that indicates the state of the circuit. It uses the Mule Object Store (OS) to save and retrieve the values after each call.
 
-This way, when the OS is initializated is using the ${appId} property as key, as shown below:
+When the application starts, OS is initializated using the ${appId} property as key, as shown below:
 ![](./docs/images/cbstore.png)
 
-This ensure that every application that uses this policy has isolated circuit state values.
+This ensures that every application that uses this policy has isolated circuit state values.
 
 *NOTE* OS settings can be overriden if needed when configuring the policy.
 
@@ -43,7 +43,7 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 | Object Store's entry TTL | The entry timeout. Default value is 1 (hour). |
 | Object Store's entry TTL unit | The time unit. Default value is "HOURS". You can choose one of the listed options based on https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html|
 
-Additionally, this policy has the resourceLevelSupported boolean set to true to allow policy support at the resource level.
+Additionally, this policy has the resourceLevelSupported boolean attribute set to true to allow policy support at the resource level.
 
 Once applied, the policy will return the following structure when an error occurs in the application (if it is propagated):
 
@@ -65,7 +65,9 @@ Connection:keep-alive
 }
 ```
 
-All values ​​are self-explanatory except for errorCount. This value is a counter and stores the amount of requests that has been sent to the API and has failed, opening the circuit again. Other field that deserves an explanation is error. If the underlying API is who is tripping the circuit for the inmmediate request, then the error is populated with error.description value propagated by the protected API. If other case the error is returned by the policy itself saying "The circuit is still open, not propagating new requests until ${DATE}". 
+All attributes of the response ​​are self-explanatory, except for errorCount and error. 
+errorCount is a counter that stores the number of requests that has been sent to the API and failed, opening the circuit again. 
+error is an attribute that is populated depending on the scenario: if the underlying API is the one who is tripping the circuit for the inmmediate request, then the error is populated with error.description value propagated by the protected API. Otherwise, the error is returned by the policy itself saying "The circuit is still open, not propagating new requests until ${DATE}". 
 
 Please refer to the following sequence diagram for an example:
 ![](./docs/images/sequence.png)
@@ -75,9 +77,9 @@ Please refer to the following sequence diagram for an example:
 The transition of states can be explained as follows:
 ![](./docs/images/states-transition.png)
 - We start with the circuit in CLOSED state
-- If the underlying service  throws an error, we count it until we reach the maximum number of errors allowed set by the Failure Threshold, then we trip the circuit (OPEN)
-- If a new incoming call arrives, we reject it immediately, unless the timestamp of the last error plus the Retry Period that we have configured exceeds the current timestamp. In that case we transition to HALF-OPEN state and we propagate the incoming request
-- If we get an error from that last call, we increment the counter and transition back to OPEN, but, if the call was sucessfull, we clear the error counter and we transition to CLOSED again
+- If the underlying service throws an error, we count it until we reach the maximum number of errors allowed set by the Failure Threshold, then we trip the circuit (OPEN)
+- If a new incoming request arrives, we reject it immediately, unless the timestamp of the last error plus the Retry Period that we have configured exceeds the current timestamp. In that case, we transition to HALF-OPEN state and we propagate the incoming request
+- If we get an error from that last request, we increment the counter and transition back to OPEN, but, if the request was sucessfull, we clear the error counter and we transition to CLOSED again
 
 #### Development
 
