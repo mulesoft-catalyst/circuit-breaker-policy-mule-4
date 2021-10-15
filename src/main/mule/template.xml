@@ -131,15 +131,12 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                 <otherwise>
                     <http-transform:set-response statusCode="503">
                         <http-transform:body>#[%dw 2.0 
+                                                import update from dw::util::Values
                                                 output application/json 
-                                                --- 
-                                                "circuitBreaker": vars.circuit mapObject ((value, key, index) -> 
-                                                {
-                                                    ((key): value) if(key as String != "timestamp"),
-                                                    (timestamp: now()) if(key as String == "timestamp")
-                                                }
-                                                ) 
-                                                ++ "error": "The circuit is still open, not propagating new requests until " ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
+                                                ---
+                                                "circuitBreaker": (vars.circuit update "timestamp" with now())
+                                                ++ "error": "The circuit is still open, not propagating new requests until " 
+                                                ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
                     </http-transform:set-response>
                 </otherwise>
             </choice>
