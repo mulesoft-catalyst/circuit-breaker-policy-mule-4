@@ -74,7 +74,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                         </os:value>
                                     </os:store>
                                     <http-transform:set-response statusCode="503">
-                                        <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": { "code": "$(attributes.statusCode)", "reasonPhrase": "$(attributes.reasonPhrase)"}]</http-transform:body>
+                                        <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": { "code": "$(attributes.statusCode)", ("reasonPhrase": "$(attributes.reasonPhrase)") if (!isEmpty(attributes.reasonPhrase)) }]</http-transform:body>
                                     </http-transform:set-response>
                                 </when>
                                 <otherwise>
