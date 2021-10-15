@@ -18,11 +18,26 @@ configuration:
     allowMultiple: false
   - propertyName: retryPeriod
     name: Retry Period
-    description: What is the time (in seconds) after which we should retry the failed request once the circuit is in OPEN state?
+    description: What is the amount of time after which we should retry the failed request once the circuit is in OPEN state?
     type: string
     optional: false
     sensitive: false
     allowMultiple: false
+  - propertyName: retryPeriodUnit
+    name: Retry Period Unit
+    description: What is the time unit for the retry period?
+    type: radio
+    options:
+      - name: Seconds
+        value: S
+      - name: Minutes
+        value: M
+      - name: Hours
+        value: H
+    defaultValue: S
+    optional: false
+    sensitive: false
+    allowMultiple: false  
   - propertyName: evaluateErrorObject
     name: Evaluate the error object to trigger the circuit?
     description: Select this option if the underlying application propagates the error object.

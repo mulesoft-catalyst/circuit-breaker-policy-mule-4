@@ -31,7 +31,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
             </try>
             <choice>
                 <!--  Condition to allow the application call  -->
-                <when expression='#[((sizeOf(vars.circuit default "") == 0) or ((vars.circuit.timestamp default 0) + ("PT$(vars.circuit.retryPeriod default 0)S" as Period) &lt; now())) or ((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}}) or vars.circuit.state == "HALF-OPEN" ]'>
+                <when expression='#[((sizeOf(vars.circuit default "") == 0) or ((vars.circuit.timestamp default 0) + ("PT$(vars.circuit.retryPeriod default 0){{{retryPeriodUnit}}}" as Period) &lt; now())) or ((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}}) or vars.circuit.state == "HALF-OPEN" ]'>
                     <try>
                         <logger message="http-policy:execute-next" level="DEBUG" category="com.mule.policies.circuitbreaker"/>
                         <http-policy:execute-next />
@@ -58,12 +58,13 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                       output application/json
                                       var currentErrorCount = (vars.circuit.errorCount default 0) + 1
                                       var state = if(currentErrorCount &lt; {{{failureThreshold}}}) "CLOSED" 
-                                                  else if ( (currentErrorCount &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + ("PT$(vars.circuit.retryPeriod default 0)S" as Period) &lt; now()) and vars.circuit.state == "OPEN") "HALF-OPEN"
+                                                  else if ( (currentErrorCount &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + ("PT$(vars.circuit.retryPeriod default 0){{{retryPeriodUnit}}}" as Period) &lt; now()) and vars.circuit.state == "OPEN") "HALF-OPEN"
                                                   else "OPEN"
                                       ---
                                       {
                                         "failureThreshold": {{{failureThreshold}}},
                                         "retryPeriod": {{{retryPeriod}}},
+                                        "retryPeriodUnit": "{{{retryPeriodUnit}}}",
                                         "state": state,
                                         "timestamp": now(),
                                         "errorCount": currentErrorCount
@@ -93,12 +94,13 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                               output application/json
                                               var currentErrorCount = (vars.circuit.errorCount default 0) + 1
                                               var state = if(currentErrorCount &lt; {{{failureThreshold}}}) "CLOSED" 
-                                                          else if ( (currentErrorCount &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + ("PT$(vars.circuit.retryPeriod default 0)S" as Period) &lt; now()) and vars.circuit.state == "OPEN") "HALF-OPEN"
+                                                          else if ( (currentErrorCount &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + ("PT$(vars.circuit.retryPeriod default 0){{{retryPeriodUnit}}}" as Period) &lt; now()) and vars.circuit.state == "OPEN") "HALF-OPEN"
                                                           else "OPEN"
                                               ---
                                               {
                                                 "failureThreshold": {{{failureThreshold}}},
                                                 "retryPeriod": {{{retryPeriod}}},
+                                                "retryPeriodUnit": "{{{retryPeriodUnit}}}",
                                                 "state": state,
                                                 "timestamp": now(),
                                                 "errorCount": currentErrorCount
@@ -136,7 +138,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                                 ---
                                                 "circuitBreaker": (vars.circuit update "timestamp" with now())
                                                 ++ "error": "The circuit is still open, not propagating new requests until " 
-                                                ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod)S" as Period)]</http-transform:body>
+                                                ++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period)]</http-transform:body>
                     </http-transform:set-response>
                 </otherwise>
             </choice>

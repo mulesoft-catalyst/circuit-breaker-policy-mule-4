@@ -34,7 +34,8 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 | Parameter | Purpose |
 | ------ | ------ |
 | Failure Threshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
-| Retry Period | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
+| Retry Period | amount of time the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
+| Retry Period Unit | the time unit for the retry period value: seconds, minutes, or hours |
 | Evaluate the error object to trigger the circuit? | - Checkbox - Select this option if the underlying application propagates the error object. E.g. applications not handling errors or raising custom ones on error handling strategies |
 | Exceptions Array | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
 | Evaluate the HTTP response to trigger the circuit? | - Checkbox - Select this option to evaluate the HTTP response (status code). Check this option if evaluate error object option is unchecked.    |
@@ -57,6 +58,7 @@ Connection:keep-alive
     "circuitBreaker": {
         "failureThreshold": 1,
         "retryPeriod": 20,
+        "retryPeriodUnit": "S",
         "state": "OPEN",
         "timestamp": "2019-11-12T14:59:42.942Z",
         "errorCount": 5,
@@ -65,9 +67,10 @@ Connection:keep-alive
 }
 ```
 
-All attributes of the response ​​are self-explanatory, except for errorCount and error. 
-errorCount is a counter that stores the number of requests that has been sent to the API and failed, opening the circuit again. 
-error is an attribute that is populated depending on the scenario: if the underlying API is the one who is tripping the circuit for the inmmediate request, then the error is populated with error.description value propagated by the protected API. Otherwise, the error is returned by the policy itself saying "The circuit is still open, not propagating new requests until ${DATE}". 
+The example above shows a error state of an open circuit, threshold of 1 error, retry period of 20 seconds, and 5 errors encountered.
+
+The `errorCount` field is a counter that stores the number of requests that has been sent to the API and failed, opening the circuit again. 
+The `error` field is an attribute that is populated depending on the scenario: if the underlying API is the one who is tripping the circuit for the inmmediate request, then `error` is populated with `error.description` value propagated by the protected API. Otherwise, the error is returned by the policy itself saying "The circuit is still open, not propagating new requests until ${DATE}".  
 
 Please refer to the following sequence diagram for an example:
 ![](./docs/images/sequence.png)
