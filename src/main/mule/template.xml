@@ -123,9 +123,6 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                         </otherwise>
                                     </choice>
                                 </on-error-propagate>
-                                <on-error-continue type="OS:KEY_NOT_FOUND" logException="false">
-                                    <logger message="Circuit state is CLOSED. Continue processing."  level="DEBUG" category="com.mule.policies.circuitbreaker"/>
-                                </on-error-continue>
                             </error-handler>
                         {{/if}}    
                     </try>
