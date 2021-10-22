@@ -1,6 +1,6 @@
 id: Circuit Breaker
 name: Circuit Breaker
-description: A custom policy to implement a lightweight Circuit Breaker pattern in Mule 4 APIs
+description: 'This provides a lightweight Circuit Breaker pattern for Mule 4 APIs.  At least one of the "Evaluate Error Object" or "Evaluate HTTP Response" options must be selected to enable circuit breaker functionality.'
 category: Custom
 type: custom
 resourceLevelSupported: true
@@ -11,18 +11,33 @@ providedCharacteristics: []
 configuration:
   - propertyName: failureThreshold
     name: Failure Threshold
-    description: How many failures should happen before trip the circuit (state = OPEN).
+    description: How many failures should happen before tripping the circuit (state = OPEN)?
     type: string
     optional: false
     sensitive: false
     allowMultiple: false
   - propertyName: retryPeriod
     name: Retry Period
-    description: What is the time (in seconds) after which we should retry the failed request once the circuit is in OPEN state?
+    description: What is the amount of time after which we should retry the failed request once the circuit is in OPEN state?
     type: string
     optional: false
     sensitive: false
     allowMultiple: false
+  - propertyName: retryPeriodUnit
+    name: Retry Period Unit
+    description: What is the time unit for the retry period?
+    type: radio
+    options:
+      - name: Seconds
+        value: S
+      - name: Minutes
+        value: M
+      - name: Hours
+        value: H
+    defaultValue: S
+    optional: false
+    sensitive: false
+    allowMultiple: false  
   - propertyName: evaluateErrorObject
     name: Evaluate the error object to trigger the circuit?
     description: Select this option if the underlying application propagates the error object.
@@ -33,9 +48,9 @@ configuration:
     name: Exceptions Array
     description: |
         Specify all the error types that can trip the circuit. The default value is ANY, and means that any exception occurred in the protected application will trigger the circuit.
-        Expect a comma separated string. Example: "MULE:EXPRESSION, HTTP:UNAUTHORIZED". Double quotes are required but spaces between types are not.
+        Separate multiple entries with commas. Example: MULE:EXPRESSION,HTTP:UNAUTHORIZED.
     type: string
-    defaultValue: '"ANY"'
+    defaultValue: ANY
     optional: true
     sensitive: false
     allowMultiple: false
@@ -51,14 +66,20 @@ configuration:
     name: HTTP Codes Array
     description: |
         Specify all the HTTP codes that can trip the circuit. The default value is 500 (Internal Server Error).
-        Expect a comma separated string. Example: "500, 401". Double quotes are required but spaces between types are not.
+        Separate multiple entries with commas. Example: 500,503.
     type: string
-    defaultValue: '"500"'
+    defaultValue: "500"
     optional: true
     sensitive: false
     allowMultiple: false
     dependsOnKey: evaluateHttpResponse
     dependsOnValue: true
+  - propertyName: giveCircuitResponse
+    name: Include the circuit breaker info in the response body?
+    description: Select this option to get circuit breaker info in the response body, which is for troubleshooting.  If not selected, no circuit info is provided in response body, which is the default state.  This does not affect the HTTP status code or the retry-after header, which is sent if the circuit is open.
+    type: boolean
+    optional: true
+    defaultValue: false  
   - propertyName: overrideOsSettings
     name: Override Object Store settings?
     description: Select this option to override default OS settings.
@@ -77,6 +98,8 @@ configuration:
     name: Object Store's entry TTL
     description: The entry timeout. Default value is 1 (hour).
     type: int
+    minimumValue: 1
+    maximumValue: 2000000000
     optional: true
     sensitive: false
     allowMultiple: false
@@ -85,21 +108,21 @@ configuration:
     dependsOnValue: true  
   - propertyName: osTtlUnit
     name: Object Store's entry TTL unit
-    description: The time unit. Default value is "HOURS".
+    description: The time unit. Default value is "Hours".
     options:
-    - name: DAYS
+    - name: Days
       value: "DAYS"  
-    - name: HOURS
+    - name: Hours
       value: "HOURS"
-    - name: MICROSECONDS
+    - name: Microseconds
       value: "MICROSECONDS"
-    - name: MILISECONDS
-      value: "MILISECONDS"  
-    - name: MINUTES
+    - name: Milliseconds
+      value: "MILLISECONDS"  
+    - name: Minutes
       value: "MINUTES"
-    - name: NANOSECONDS
+    - name: Nanoseconds
       value: "NANOSECONDS"
-    - name: SECONDS
+    - name: Seconds
       value: "SECONDS"
     type: radio
     defaultValue: HOURS
