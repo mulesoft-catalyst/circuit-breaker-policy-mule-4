@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.mulesoft.org/schema/mule/core"
-      xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:http-policy="http://www.mulesoft.org/schema/mule/http-policy"
-      xmlns:http-transform="http://www.mulesoft.org/schema/mule/http-policy-transform" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core
+<mule xmlns:http-policy-transform="http://www.mulesoft.org/schema/mule/http-policy-transform" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:http-policy="http://www.mulesoft.org/schema/mule/http-policy" xmlns:http-transform="http://www.mulesoft.org/schema/mule/http-policy-transform" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core
 http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http
 http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
@@ -23,11 +23,12 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
     <http-policy:proxy name="{{{policyId}}}-custom-policy">
         <http-policy:source>
             <flow-ref name="getStatusFromCache" />
-            <choice>
-                
+            <choice>                
                 <when expression='#[ ((sizeOf(vars.circuit default "") == 0) or ((vars.circuit.timestamp default 0) + ("PT$(vars.circuit.retryPeriod default 0){{{retryPeriodUnit}}}" as Period) &lt; now())) or ((vars.circuit.errorCount default 0) &lt; {{{failureThreshold}}}) or vars.circuit.state == "HALF-OPEN" ]'>
 					<!-- Circuit is closed or half-open -->
+				{{#if evaluateErrorObject}}
                     <try>
+				{{/if}}
                         <logger message="http-policy:execute-next" level="DEBUG" category="com.mule.policies.circuitbreaker"/>
                         <http-policy:execute-next />
                         <logger message="#[attributes]" level="DEBUG" category="com.mule.policies.circuitbreaker"/>
@@ -40,17 +41,17 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                 <os:remove key="${apiId}" objectStore="cbstore"  />
                             </otherwise>
                         </choice>
-                        {{#if evaluateHttpResponse}}
+				{{#if evaluateHttpResponse}}
                             <flow-ref name="evaluateHttpResponse" />
-                        {{/if}}
-                        {{#if evaluateErrorObject}}
+				{{/if}}
+				{{#if evaluateErrorObject}}
                             <error-handler>
                                 <on-error-propagate type="ANY" logException="true">
                                     <flow-ref name="evaluateErrorObject" />
                                 </on-error-propagate>
-                            </error-handler>
-                        {{/if}}    
+                            </error-handler>  
                     </try>
+				{{/if}}
                 </when>
                 <otherwise>
 					<!-- Circuit open -->
@@ -60,7 +61,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
         </http-policy:source>
     </http-policy:proxy>
 
-	<!-- SUBFLOWS - Used in Studio UI -->
+	<!-- SUBFLOWS: can be used in Studio UI -->
 	
 	<!-- Get circuit's previous state from cache -->
 	<sub-flow name="getStatusFromCache">
@@ -97,6 +98,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 					"timestamp": now(),
 					"errorCount": currentErrorCount
 				}]' doc:name="Set Circuit Breaker Info"/>
+		<logger level="DEBUG" doc:name="Updated Circuit Info" doc:id="48d22930-92e1-42eb-b446-bb846bf08c91" message='#[vars.circuit default {}]' category="com.mule.policies.circuitbreaker" />
 		<os:store key="${apiId}" objectStore="cbstore" doc:name="Save status to OS">
 			<os:value>
 				#[vars.circuit]
@@ -104,23 +106,37 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 		</os:store>
 	</sub-flow>
 	
-	<!-- Evaluate circuit state based on API response's status code -->
+	<!-- Evaluate circuit state based on API response's status code.  If CB info is disabled, then body is API response body.  
+		If CB info is enabled, then body is CB field and data field with API response body. -->
 	<sub-flow name="evaluateHttpResponse">
 		<choice doc:name="Is status code in CB list?">
-			<when expression="#[output application/json 
-								var httpCodesArray=(({{{httpCodesArray}}} replace ' ' with '') splitBy  ',') as Array 
+			<when expression='#[output application/json 
+								var httpCodesArray=(("{{{httpCodesArray}}}" replace " " with "") splitBy  ",") as Array 
 								--- 
-								(httpCodesArray contains (attributes.statusCode as String))]">
-
+								(httpCodesArray contains (attributes.statusCode as String))]'>
+				<logger message="HTTP Status Code is included in the HTTP Codes Array" level="DEBUG" category="com.mule.policies.circuitbreaker" doc:name="HTTP Status Code in list"/>
 				<flow-ref name="updateCircuit" doc:name="updateCircuit"/>
 				<set-variable variableName="response" doc:name="Set Response Info"
 					value='#[output application/json
+					{{#if giveCircuitResponse}}
+						import update from dw::util::Values
+						var isOpen = vars.circuit.state == "OPEN" default false
+						var retryAfter = vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period) as String
+					{{/if}}
 						---
-						{
+						{	
 							status: 503,
+					{{#if giveCircuitResponse}}
 							body: {
-								circuitBreaker: vars.circuit ++ "error": { "code": "$(attributes.statusCode)", ("reasonPhrase": "$(attributes.reasonPhrase)") if (!isEmpty(attributes.reasonPhrase)) }
+								(data: payload) if (!isEmpty(payload)),
+								circuitBreaker: vars.circuit update {
+									case .errorStatusCode! -> attributes.statusCode as String
+									case .retryAfter! if (isOpen) -> retryAfter
+								}
 							}
+					{{else}}
+							body: payload
+					{{/if}}								
 						}]' />
 				<flow-ref name="setResponse" doc:name="setResponse"/>
 			</when>
@@ -130,19 +146,32 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 		</choice>
 	</sub-flow>
 	
-	<!-- Evaluate circuit state based on error thrown from API -->
+	<!-- Evaluate circuit state based on error thrown from API.  This always returns error field in body and will add CB info if enabled. -->
 	<sub-flow name="evaluateErrorObject">
 		<flow-ref name="errorLogger" doc:name="errorLogger"/>
 		<choice doc:name="Is exception in CB list?">
-			<when expression="#[output application/json var exceptionsArray=(({{{exceptionsArray}}} replace ' ' with '') splitBy  ',') as Array --- (exceptionsArray contains (error.errorType.namespace ++ ':' ++ error.errorType.identifier) ) or ( (sizeOf(exceptionsArray) == 1) and (exceptionsArray contains 'ANY'))]">
+			<when expression='#[output application/json var exceptionsArray=(("{{{exceptionsArray}}}" replace " " with "") splitBy  ",") as Array --- (exceptionsArray contains (error.errorType.namespace ++ ":" ++ error.errorType.identifier) ) or ( (sizeOf(exceptionsArray) == 1) and (exceptionsArray contains "ANY"))]'>
 				
+				<logger level="DEBUG" doc:name="Exception in list" doc:id="d5857c44-0728-4ca9-a78e-6bb2491d6c02" message="Exception is included in the Exceptions Array" category="com.mule.policies.circuitbreaker" />
 				<flow-ref name="updateCircuit" doc:name="updateCircuit"/>
 				<set-variable variableName="response" doc:name="Set Response Info"
 					value='#[output application/json
+					{{#if giveCircuitResponse}}
+						import update from dw::util::Values
+						var isOpen = vars.circuit.state == "OPEN" default false
+						var retryAfter = vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period) as String
+					{{/if}}
 						---
-						{
+						{			
 							status: 503,
-							body: { "circuitBreaker": vars.circuit ++ "error": "$(error.description)" }
+							body: {
+								error: error.description default "",
+					{{#if giveCircuitResponse}}
+								circuitBreaker: vars.circuit update {
+									case .retryAfter! if (isOpen) -> retryAfter
+								}
+					{{/if}}
+							}											
 						}]' />
 				<flow-ref name="setResponse" doc:name="setResponse"/>
 			</when>
@@ -153,43 +182,71 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 						---
 						{
 							status: 500,
-							body: error.description
+							body: {
+								error: error.description default ""
+							}
 						}]' />
 				<flow-ref name="setResponse" doc:name="setResponse"/>
 			</otherwise>
 		</choice>
 	</sub-flow>
 	
-	<!-- Set the open circuit 503 response with the retry-after header -->
+	<!-- Set the open circuit 503 response.  Body is empty if CB info is disabled.
+		The timestamp in CB info is updated to current time, but retryAfter is calculated from the original timestamp. -->
 	<sub-flow name="processOpenCircuit">
 		<logger message="Circuit is open, so sending 503 response." level="DEBUG" category="com.mule.policies.circuitbreaker" />
 		<set-variable variableName="response" doc:name="Set Response Info"
 			value='#[output application/json
 				import update from dw::util::Values
+				var retryAfter = vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period) as String
 				---
 				{
-					status: 503,
-					body: "circuitBreaker": (vars.circuit update "timestamp" with now())
-						++ "error": "The circuit is still open, not propagating new requests until " 
-						++ vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period)
+					status: 503,					
+			{{#if giveCircuitResponse}}
+					body: {
+						circuitBreaker: vars.circuit update {
+							case .timestamp -> now()
+							case .retryAfter! -> retryAfter
+						}
+					}
+			{{/if}}			
 				}]' />
 		<flow-ref name="setResponse" doc:name="setResponse"/>
 	</sub-flow>
 	
 	<!-- Set the HTTP response: status, body [optional], and retry-after header [when OPEN] -->
 	<sub-flow name="setResponse">
-		<http-transform:set-response
-			statusCode="#[vars.response.status default 503]" doc:name="Set HTTP response">
-			<http-transform:body><![CDATA[#[output application/json
-				---
-				vars.response.body default null]]]>
-			</http-transform:body>
-			<http-transform:headers ><![CDATA[#[output application/java
-var retryAfter = vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period)
----
-{                                  
-   ("retry-after": retryAfter as String {format: "EEE, dd MMM uuuu KK:mm:ss zz"} default "") if (vars.circuit.state == "OPEN" default false)
-}]]]></http-transform:headers>
-		</http-transform:set-response>
+		<choice doc:name="Does response body exist?" doc:id="38126881-11b7-480d-9166-7a632e0968e5" >
+			<when expression="#[!isEmpty(vars.response.body)]">
+				<http-transform:set-response statusCode="#[vars.response.status default 503]" doc:name="Set HTTP response with body">
+					<http-transform:body><![CDATA[#[output application/json
+						---
+						vars.response.body]]]>
+					</http-transform:body>
+					<http-transform:headers><![CDATA[#[output application/java
+						var isOpen = vars.circuit.state == "OPEN" default false
+						var retryAfter = vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period)
+						---
+						{                                  
+						   ("retry-after": retryAfter as String {format: "EEE, dd MMM uuuu KK:mm:ss zz"} default "") if (isOpen)
+						}]]]>
+					</http-transform:headers>
+				</http-transform:set-response>
+			</when>
+			<otherwise >
+				<set-payload value="#[null]" doc:name="Set empty body (null and */* mimeType)" mimeType="*/*"/>
+				<http-policy-transform:set-response statusCode="#[vars.response.status default 503]" doc:name="Set HTTP response without body" >
+					<http-transform:body><![CDATA[#[payload]]]></http-transform:body>
+					<http-policy-transform:headers ><![CDATA[#[output application/java
+						var isOpen = vars.circuit.state == "OPEN" default false
+						var retryAfter = vars.circuit.timestamp + ("PT$(vars.circuit.retryPeriod){{{retryPeriodUnit}}}" as Period)
+						---
+						{                                  
+						   ("retry-after": retryAfter as String {format: "EEE, dd MMM uuuu KK:mm:ss zz"} default "") if (isOpen)
+						}]]]>
+					</http-policy-transform:headers>
+				</http-policy-transform:set-response>
+			</otherwise>
+		</choice>
 	</sub-flow>
 </mule>
