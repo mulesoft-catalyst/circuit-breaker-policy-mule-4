@@ -13,23 +13,27 @@ When working on a layered architecture (API-Led is a good example) it doesn't ma
 ### How?
 This policy handles a deterministic model that indicates the state of the circuit. It uses the Mule Object Store (OS) to save and retrieve the values after each call.
 
-When the application starts, OS is initialized using the ${appId} property as key, as shown below:
+When the application starts, OS is initialized using the ${appId} property as key, as shown below.
+
 ![](./docs/images/cbstore.png)
 
 This ensures that every application that uses this policy has isolated circuit state values.
 
-*NOTE* OS settings can be overridden if needed when configuring the policy.
+*NOTE:* OS settings can be overridden if needed when configuring the policy.
 
 ## Circuit Breaker Design
 
 **State Transition**
+
 ![](./docs/images/states-transition.png)
+
 - The policy starts with the circuit in `CLOSED` state, which is the non-error state that allows calls to the API.
 - If the underlying service throws an error, the policy counts it until the maximum number of errors allowed set by the Failure Threshold is reached, then the policy trips the circuit, which is the `OPEN` state.
 - When the policy is in an `OPEN` state, it immediately rejects a new incoming request, unless the timestamp of the last error incremented by the Retry Period exceeds the current timestamp. In that case, the policy transitions to `HALF-OPEN` state and propagates the incoming request.
 - When the policy is in a `HALF-OPEN` state, if the policy receives an error from the last request, it increments the counter and transitions back to `OPEN` state; otherwise, the policy clears the error counter and transitions to `CLOSED` state.
 
 **Sequence Diagram**
+
 ![](./docs/images/sequence.png)
 
 ## Setup
