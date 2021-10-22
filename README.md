@@ -125,7 +125,7 @@ Content-Type:application/json; charset=UTF-8
 transfer-encoding:chunked
 Connection:keep-alive
 {
-	"error": "This is the exception description."
+    "error": "This is the exception description."
 }
 ```
 
@@ -138,7 +138,7 @@ Content-Type:application/json; charset=UTF-8
 transfer-encoding:chunked
 Connection:keep-alive
 {
-	"error": "This is the exception description.",
+    "error": "This is the exception description.",
     "circuitBreaker": {
         "failureThreshold": 3,
         "retryPeriod": 20,
@@ -159,7 +159,7 @@ Content-Type:application/json; charset=UTF-8
 transfer-encoding:chunked
 Connection:keep-alive
 {
-	"message": "This is the response body returned by the API."
+    "message": "This is the response body returned by the API."
 }
 ```
 
@@ -172,9 +172,9 @@ Content-Type:application/json; charset=UTF-8
 transfer-encoding:chunked
 Connection:keep-alive
 {
-	"data": {
-		"message": "This is the response body returned by the API."
-	},
+    "data": {
+        "message": "This is the response body returned by the API."
+    },
     "circuitBreaker": {
         "failureThreshold": 3,
         "retryPeriod": 20,
@@ -182,7 +182,7 @@ Connection:keep-alive
         "state": "CLOSED",
         "timestamp": "2019-11-12T14:59:42.942Z",
         "errorCount": 1,
-		"errorStatusCode": "500"
+        "errorStatusCode": "500"
     }
 }
 ```
