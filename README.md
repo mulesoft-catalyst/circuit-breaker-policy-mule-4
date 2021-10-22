@@ -88,6 +88,7 @@ The policy includes several items in the response when triggered.
   - *Circuit Breaker Info*: If the circuit breaker information checkbox is checked, and the circuit breaker is triggered, then the `circuitBreaker` field is added to the response body.  If there is already a response body, it is merged with that; because the body can be any format which may be incompatible with the circuit breaker, the existing body is moved to the `data` field.
 
 **Empty Body**
+
 An empty response body.
 
 ```
@@ -99,6 +100,7 @@ Connection:keep-alive
 ```
 
 **Empty Body + Circuit Breaker Info**
+
 Circuit breaker info is added to an empty response body.
 
 ```
@@ -121,6 +123,7 @@ Connection:keep-alive
 ```
 
 **Exception Check**
+
 Body is description of exception from API.
 
 ```
@@ -134,6 +137,7 @@ Connection:keep-alive
 ```
 
 **Exception Check + Circuit Breaker Info**
+
 Circuit breaker info is added to a response body that contains the error description.
 
 ```
@@ -155,6 +159,7 @@ Connection:keep-alive
 ```
 
 **Status Code Check**
+
 Body is existing response from API.
 
 ```
@@ -168,6 +173,7 @@ Connection:keep-alive
 ```
 
 **Status Code Check + Circuit Breaker Info**
+
 Circuit breaker info is added to a response that already has a body.  API body is moved to `data` field for compatibility.  Status code received from API is added to circuit breaker info.
 
 ```
