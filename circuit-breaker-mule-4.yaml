@@ -1,6 +1,6 @@
 id: Circuit Breaker
 name: Circuit Breaker
-description: 'This provides a lightweight Circuit Breaker pattern for Mule 4 APIs.  At least one of the "Evaluate Error Object" or "Evaluate HTTP Response" options must be selected to enable circuit breaker functionality.'
+description: 'This provides a lightweight Circuit Breaker pattern for Mule 4 APIs.'
 category: Custom
 type: custom
 resourceLevelSupported: true
