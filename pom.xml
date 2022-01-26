@@ -1,90 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>9033ff23-884a-4352-b75b-14fc8237b2c4</groupId> <!-- Change this value according your ORG ID -->
-    <artifactId>circuit-breaker-mule-4</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+	<groupId>ORG-ID</groupId> <!-- Change this value according your ORG ID -->
+	<artifactId>circuit-breaker-mule-4</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
 
-    <name>circuit-breaker-mule-4</name>
-    <description>A custom policy to implement a lightweight Circuit Breaker pattern</description>
+	<name>circuit-breaker-mule-4</name>
+	<description>A custom policy to implement a lightweight Circuit Breaker pattern</description>
 
-    <packaging>mule-policy</packaging>
+	<packaging>mule-policy</packaging>
 
-    <properties>
-        <mule.maven.plugin.version>3.2.7</mule.maven.plugin.version>
-        <exchange.url>https://maven.anypoint.mulesoft.com/api/v1/organizations/${project.groupId}/maven</exchange.url> <!-- Change this value according your ORG ID -->
-        <os.version>1.1.1</os.version>
-        <http.policy.transform.version>1.0.0</http.policy.transform.version>
-    </properties>
+	<properties>
+		<mule.maven.plugin.version>3.5.3</mule.maven.plugin.version>
+		<exchange.url>https://maven.anypoint.mulesoft.com/api/v1/organizations/${project.groupId}/maven</exchange.url>
+		<os.version>1.2.1</os.version>
+		<http.policy.transform.version>3.1.2</http.policy.transform.version>
+	</properties>
 
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.mule.tools.maven</groupId>
-                <artifactId>mule-maven-plugin</artifactId>
-                <version>${mule.maven.plugin.version}</version>
-                <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>upload-template</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>deploy-file</goal>
-                        </goals>
-                        <configuration>
-                            <repositoryId>exchange-server</repositoryId>
-                            <url>${exchange.url}</url>
-                            <file>${project.basedir}/${project.artifactId}.yaml</file>
-                            <generatePom>false</generatePom>
-                            <groupId>${project.groupId}</groupId>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <version>${project.version}</version>
-                            <packaging>yaml</packaging>
-                            <classifier>policy-definition</classifier>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.mule.tools.maven</groupId>
+				<artifactId>mule-maven-plugin</artifactId>
+				<version>${mule.maven.plugin.version}</version>
+				<extensions>true</extensions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>upload-template</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy-file</goal>
+						</goals>
+						<configuration>
+							<repositoryId>exchange-server</repositoryId>
+							<url>${exchange.url}</url>
+							<file>${project.basedir}/${project.artifactId}.yaml</file>
+							<generatePom>false</generatePom>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>${project.artifactId}</artifactId>
+							<version>${project.version}</version>
+							<packaging>yaml</packaging>
+							<classifier>policy-definition</classifier>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.mule.connectors</groupId>
-            <artifactId>mule-objectstore-connector</artifactId>
-            <version>${os.version}</version>
-            <classifier>mule-plugin</classifier>
-        </dependency>
-        <dependency>
-           <groupId>com.mulesoft.anypoint</groupId>
-           <artifactId>mule-http-policy-transform-extension</artifactId>
-           <version>${http.policy.transform.version}</version>
-           <classifier>mule-plugin</classifier>
-       </dependency>
-    </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-objectstore-connector</artifactId>
+			<version>${os.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.mulesoft.anypoint</groupId>
+			<artifactId>mule-http-policy-transform-extension</artifactId>
+			<version>${http.policy.transform.version}</version>
+			<classifier>mule-plugin</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>org.mule.connectors</groupId>
+					<artifactId>mule-http-connector</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
 
-    <distributionManagement>
-        <repository>
-            <id>exchange-server</id>
-            <name>Corporate Repository</name>
-            <url>${exchange.url}</url>
-            <layout>default</layout>
-        </repository>
-    </distributionManagement>
+	<distributionManagement>
+		<repository>
+			<id>exchange-server</id>
+			<name>Corporate Repository</name>
+			<url>${exchange.url}</url>
+			<layout>default</layout>
+		</repository>
+	</distributionManagement>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>mule-plugin</id>
-            <name>Mule Repository</name>
-            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
-        </pluginRepository>
-    </pluginRepositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mule-plugin</id>
+			<name>Mule Repository</name>
+			<url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
