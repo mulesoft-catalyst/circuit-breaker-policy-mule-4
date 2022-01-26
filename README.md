@@ -1,6 +1,6 @@
 # Circuit-Breaker Custom Policy
 
-This is a custom policy that implements a lightweight Circuit Breaker pattern for Mule 4. By applying this policy to an API, these features are added:
+This is a custom policy that implements a lightweight Circuit Breaker pattern for Mule 4. By applying this policy to an API, the following tasks can be performed:
 
   - Define an error threshold giving the API the flexibility to fail as many times as you define before tripping the circuit
   - Define a retry period after which the protected API should allow incoming requests
@@ -11,7 +11,7 @@ This is a custom policy that implements a lightweight Circuit Breaker pattern fo
 When working on a layered architecture (API-Led is a good example) it doesn't make sense to propagate the incoming requests when we know that one of the components of this architecture is not working correctly. This policy provides an entry point for the consumer, preventing spreading calls through the different layers, allowing time to failing resources to recover.
 
 ### How?
-This policy handles a deterministic model that indicates the state of the circuit. It uses the Mule Object Store (OS) to save and retrieve the values after each call.
+This policy handles a deterministic model that indicates the state of the circuit. It uses the [Mule Object Store](https://docs.mulesoft.com/object-store-connector/1.2/object-store-connector-reference) module (OS) to save and retrieve the values after each call.
 
 When the application starts, OS is initialized using the ${appId} property as key, as shown below.
 
@@ -60,7 +60,7 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 | Include the circuit breaker info in the response body? | - Checkbox - Select this option to get circuit information in the response body, which is for troubleshooting. |
 | Override Object Store settings? | - Checkbox - Select this option to override default OS settings. Defaut OS will use persistent OS, with 1 hour entry TTL. |
 | Object Store's entry TTL | The entry timeout. Default value is 1 (hour). |
-| Object Store's entry TTL unit | The time unit. Default value is "HOURS". You can choose one of the listed options based on https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/TimeUnit.html|
+| Object Store's entry TTL unit | The time unit. Default value is "HOURS". You can choose one of the listed options based on https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/TimeUnit.html|
 
 This policy can be applied at the resource level or across the entire API.
 
@@ -68,7 +68,7 @@ This policy can be applied at the resource level or across the entire API.
 
 The policy only engages the circuit breaker functionality if `Evaluate the error object to trigger the circuit?` or `Evaluate the HTTP response to trigger the circuit?` is checked, and the corresponding criteria is met.  If neither of those are checked, or the criteria is not met, then the API executes normally without any modification from the policy.
 
-When the circuit is open, the policy returns the `retry-after` header, which is defined in [RFC 2616][retryAfterSpec].  This defines the time, in [HTTP-date format][httpDateSpec], when the circuit breaker will be half-open and allow a call into the API.  This header is not returned if the circuit is closed or half-open.  An example is provided below.
+When the circuit is open, the policy returns the `retry-after` header, which is defined in [RFC 2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.37).  This defines the time, in [HTTP-date format](https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1), when the circuit breaker will be half-open and allow a call into the API.  This header is not returned if the circuit is closed or half-open.  An example is provided below.
 
 ```
 retry-after:Fri, 22 Oct 2021 11:28:21 -05:00
@@ -215,7 +215,7 @@ When circuit breaker info is provided in the response body, it contains the fiel
 If the policy is not behaving as expected, developers can follow the troubleshooting options below.
 
 - Enable circuit breaker info in the response body by checking `Include the circuit breaker info in the response body?` checkbox.  This allows the caller to see detailed circuit breaker state in the response body.
-- Enable the policy's loggers.  This allows the operator to see detailed circuit breaker state in the log.  This can be done by adding the following line to log4j2.xml or equivalent depending on infrastructure: `<AsyncLogger name="com.mule.policies.circuitbreaker" level="DEBUG"/>`.
+- Enable the policy's loggers.  This allows the operator to see detailed circuit breaker state in the log.  This can be done by adding the following line to log4j2.xml or equivalent depending on the deployment model: `<AsyncLogger name="com.mule.policies.circuitbreaker" level="DEBUG"/>`.
 
 #### Development
 
@@ -242,7 +242,3 @@ Want to contribute? Great!
 
 ### Todos
  - Write Tests
-
-
-[retryAfterSpec]: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.37
-[httpDateSpec]: https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1
