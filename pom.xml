@@ -16,7 +16,7 @@
     <properties>
         <mule.maven.plugin.version>3.2.7</mule.maven.plugin.version>
         <exchange.url>https://maven.anypoint.mulesoft.com/api/v1/organizations/${project.groupId}/maven</exchange.url> <!-- Change this value according your ORG ID -->
-        <os.version>1.1.1</os.version>
+        <os.version>1.2.1</os.version>
         <http.policy.transform.version>1.0.0</http.policy.transform.version>
     </properties>
 
