@@ -51,18 +51,21 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                                     output application/json 
                                                     var httpCodesArray=(({{{httpCodesArray}}} replace ' ' with '') splitBy  ',') as Array 
                                                     --- 
-                                                    (httpCodesArray contains (attributes.statusCode as String))]">
+                                                    (httpCodesArray contains (attributes.statusCode as String))  
+                                                    ]">
 
                                     <!-- Trip the Circuit -->
                                     <set-variable value='#[%dw 2.0
                                       output application/json
-                                      var currentErrorCount = (vars.circuit.errorCount default 0) + 1
+                                      var currentErrorCount = if( (vars.circuit.timestamp default 0) + (&quot;PT$({{timeFrame}} default 0)S&quot; as Period) &gt; now() ) (vars.circuit.errorCount default 0) + 1
+                                                              else 0
                                       var state = if(currentErrorCount &lt; {{{failureThreshold}}}) "CLOSED" 
                                                   else if ( (currentErrorCount &gt;= {{{failureThreshold}}}) and ((vars.circuit.timestamp) + (&quot;PT$(vars.circuit.retryPeriod default 0)S&quot; as Period) &lt; now()) and vars.circuit.state == "OPEN") "HALF-OPEN" 
                                                   else "OPEN"
                                       ---
                                       {
                                         "failureThreshold": {{{failureThreshold}}},
+                                        "timeFrame": {{{timeFrame}}},
                                         "retryPeriod": {{{retryPeriod}}},
                                         "state": state,
                                         "timestamp": now(),
@@ -73,9 +76,9 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                             #[vars.circuit]
                                         </os:value>
                                     </os:store>
-                                    <http-transform:set-response statusCode="503">
-                                        <http-transform:body>#[%dw 2.0 output application/json --- "circuitBreaker": vars.circuit ++ "error": { "code": "$(attributes.statusCode)", "reasonPhrase": "$(attributes.reasonPhrase)"}]</http-transform:body>
-                                    </http-transform:set-response>
+<!--                                     <http-transform:set-response statusCode="503"> -->
+<!--                                         <http-transform:body>#[%dw 2.0 output application/json -&#45;&#45; "circuitBreaker": vars.circuit ++ "error": { "code": "$(attributes.statusCode)", "reasonPhrase": "$(attributes.reasonPhrase default '')"}]</http-transform:body> -->
+<!--                                     </http-transform:set-response> -->
                                 </when>
                                 <otherwise>
                                     <logger message="HTTP Status Code not included in the HTTP Codes Array" level="DEBUG" category="com.mule.policies.circuitbreaker" />
