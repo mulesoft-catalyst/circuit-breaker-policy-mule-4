@@ -16,6 +16,13 @@ configuration:
     optional: false
     sensitive: false
     allowMultiple: false
+  - propertyName: timeFrame
+    name: Time Frame
+    description: What is the time (in seconds) within the errors must be counted?
+    type: string
+    optional: false
+    sensitive: false
+    allowMultiple: false
   - propertyName: retryPeriod
     name: Retry Period
     description: What is the time (in seconds) after which we should retry the failed request once the circuit is in OPEN state?
