@@ -77,17 +77,17 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                             #[vars.circuit]
                                         </os:value>
                                     </os:store>
-                                    <http-transform:add-headers outputType="response">
+                                    <http-transform:add-response-headers>
 										<http-transform:headers>#[output application/java --- { "x-cb-status": vars.circuit.state }]</http-transform:headers>
-									</http-transform:add-headers>
+									</http-transform:add-response-headers>
 <!--                                     <http-transform:set-response statusCode="503"> -->
 <!--                                         <http-transform:body>#[%dw 2.0 output application/json -&#45;&#45; "circuitBreaker": vars.circuit ++ "error": { "code": "$(attributes.statusCode)", "reasonPhrase": "$(attributes.reasonPhrase default '')"}]</http-transform:body> -->
 <!--                                     </http-transform:set-response> -->
                                 </when>
                                 <otherwise>
-                                	<http-transform:add-headers outputType="response">
+                                	<http-transform:add-response-headers>
 										<http-transform:headers>#[output application/java --- { "x-cb-status": (vars.circuit.state default "CLOSED") }]</http-transform:headers>
-									</http-transform:add-headers>
+									</http-transform:add-response-headers>
                                     <logger message="HTTP Status Code not included in the HTTP Codes Array" level="DEBUG" category="com.mule.policies.circuitbreaker" />
                                 </otherwise>
                             </choice>
@@ -122,9 +122,9 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                                     #[vars.circuit]
                                                 </os:value>
                                             </os:store>
-											<http-transform:add-headers outputType="response">
+											<http-transform:add-response-headers>
 												<http-transform:headers>#[output application/java --- { "x-cb-status": vars.circuit.state }]</http-transform:headers>
-											</http-transform:add-headers>
+											</http-transform:add-response-headers>
 <!--                                             <http-transform:set-response statusCode="503"> -->
 <!--                                                 <http-transform:body>#[%dw 2.0 output application/json -&#45;&#45; "circuitBreaker": vars.circuit ++ "error": "$(error.description)"]</http-transform:body> -->
 <!--                                             </http-transform:set-response> -->
@@ -145,9 +145,9 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                     </try>
                 </when>
                 <otherwise>
-                	<http-transform:add-headers outputType="response">
+                	<http-transform:add-response-headers>
 						<http-transform:headers>#[output application/java --- { "x-cb-status": (vars.circuit.state default "CLOSED") }]</http-transform:headers>
-					</http-transform:add-headers>
+					</http-transform:add-response-headers>
                     <http-transform:set-response statusCode="503">
                         <http-transform:body>#[%dw 2.0 
                                                 output application/json 

@@ -6,6 +6,7 @@ type: custom
 resourceLevelSupported: true
 encryptionSupported: false
 standalone: true
+supportedJavaVersions: ["8", "11", "17"]
 requiredCharacteristics: []
 providedCharacteristics: []
 configuration:
