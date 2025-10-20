@@ -14,15 +14,15 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 
     <!-- Object Store configuration -->
     {{#if overrideOsSettings}}
-        <os:object-store name="cbstore" persistent="{{{osPersistent}}}" entryTtl="{{{osTtl}}}" entryTtlUnit="{{{osTtlUnit}}}" />
+        <os:object-store name="{{{osName}}}" persistent="{{{osPersistent}}}" entryTtl="{{{osTtl}}}" entryTtlUnit="{{{osTtlUnit}}}" />
     {{else}}
-        <os:object-store name="cbstore" persistent="true" entryTtl="1" entryTtlUnit="HOURS" />
+        <os:object-store name="{{{osName}}}" persistent="true" entryTtl="1" entryTtlUnit="HOURS" />
     {{/if}}
     <http-policy:proxy name="{{{policyId}}}-custom-policy">
         <http-policy:source>
             <try>
                 <!-- Checking Cache for OPEN| HALF-OPEN stored value -->
-                <os:retrieve key="${apiId}" target="circuit"  objectStore="cbstore" />
+                <os:retrieve key="${apiId}" target="circuit"  objectStore="{{{osName}}}" />
                 <error-handler>
                     <on-error-continue type="OS:KEY_NOT_FOUND" logException="false" >
                         <logger message="Circuit is CLOSED. Continue processing. Before execution" level="DEBUG" category="com.mule.policies.circuitbreaker" />
@@ -42,7 +42,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                             </when>
                             <otherwise>
                                 <logger message="http-policy:execute-next completed. Removing cached circuit" level="DEBUG" category="com.mule.policies.circuitbreaker"></logger>
-                                <os:remove key="${apiId}" objectStore="cbstore"  />
+                                <os:remove key="${apiId}" objectStore="{{{osName}}}"  />
                             </otherwise>
                         </choice>
                         {{#if evaluateHttpResponse}}
@@ -72,7 +72,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                         "timestamp": now(),
                                         "errorCount": currentErrorCount
                                        }]' variableName="circuit" />
-                                    <os:store key="${apiId}" objectStore="cbstore">
+                                    <os:store key="${apiId}" objectStore="{{{osName}}}">
                                         <os:value>
                                             #[vars.circuit]
                                         </os:value>
@@ -117,7 +117,7 @@ http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
                                                 "errorCount": currentErrorCount
                                                }]'
                                                           variableName="circuit" />
-                                            <os:store key="${apiId}" objectStore="cbstore">
+                                            <os:store key="${apiId}" objectStore="{{{osName}}}">
                                                 <os:value>
                                                     #[vars.circuit]
                                                 </os:value>

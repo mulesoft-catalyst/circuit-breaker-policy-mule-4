@@ -66,6 +66,13 @@ configuration:
     allowMultiple: false
     dependsOnKey: evaluateHttpResponse
     dependsOnValue: true
+  - propertyName: osName
+    name: Object Store's unique name
+    description: |
+        The unique identifier for the Object Store. To be used when level Resource-Level Policy is defined. Example: "cbstore".
+    type: string
+    optional: false
+    defaultValue: "cbstore"
   - propertyName: overrideOsSettings
     name: Override Object Store settings?
     description: Select this option to override default OS settings.
@@ -87,7 +94,7 @@ configuration:
     optional: true
     sensitive: false
     allowMultiple: false
-    defaultValue: "1"
+    defaultValue: 1
     dependsOnKey: overrideOsSettings
     dependsOnValue: true  
   - propertyName: osTtlUnit
