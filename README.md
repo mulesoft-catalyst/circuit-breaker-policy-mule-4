@@ -34,6 +34,7 @@ After publishing to Exchange, follow these steps to apply the policy to an exist
 | Parameter | Purpose |
 | ------ | ------ |
 | Failure Threshold | maximum number of errors allowed before tripping the circuit (putting it in OPEN state) |
+| Time Frame | What is the time (in seconds) within the errors must be counted? |
 | Retry Period | number of seconds the pattern will wait before trying to reach depedent components (underlying APIs) when a new request is received |
 | Evaluate the error object to trigger the circuit? | - Checkbox - Select this option if the underlying application propagates the error object. E.g. applications not handling errors or raising custom ones on error handling strategies |
 | Exceptions Array | a comma separated string containing the exception types that are expected to trip the circuit. Example: "MULE:COMPOSITE_ROUTING, HTTP:UNAUTHORIZED, MULE:EXPRESSION" |
